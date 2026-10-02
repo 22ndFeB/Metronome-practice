@@ -458,6 +458,47 @@ tbody tr:last-child td { border-bottom: 0; }
   .led.flash { transform: none; }
   .countdown.pop span { animation: none; }
 }
+
+/* ---------- phone play mode: the stage covers the screen in landscape, tap anywhere ---------- */
+.imm-stop { display: none; }
+html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
+.stage.immersive {
+  position: fixed; top: 0; left: 0; z-index: 50;
+  width: var(--appW, 100vw); height: var(--appH, 100vh);
+  margin: 0; border: 0; border-radius: 0; box-shadow: none;
+  padding: max(8px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 8px; overflow: hidden;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+}
+/* the phone is held upright but the screen did not rotate: draw the landscape layout turned 90° */
+.stage.immersive.rot {
+  width: var(--appH, 100vh); height: var(--appW, 100vw);
+  transform-origin: 0 0; transform: rotate(90deg) translateY(-100%);
+  padding: max(8px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-top));
+}
+.stage.immersive .controls, .stage.immersive .lane-hint, .stage.immersive .bpm-steps { display: none; }
+.stage.immersive .readout { flex-wrap: nowrap; gap: 6px 18px; padding-right: 96px; }
+.stage.immersive .tempo { gap: 10px; }
+.stage.immersive .pendulum { width: 24px; height: 32px; }
+.stage.immersive .bpm-num { font-size: 30px; }
+.stage.immersive .tempo-name { font-size: 12px; }
+.stage.immersive .scoreboard { gap: 16px; }
+.stage.immersive .scoreboard dd { font-size: 18px; }
+.stage.immersive .lane-wrap { height: auto; min-height: 0; }
+.stage.immersive .meter-block { gap: 2px; }
+.stage.immersive .meter-row { grid-template-columns: auto minmax(0, 1fr) auto; }
+.stage.immersive .meter-row .side { display: block; }
+.stage.immersive .bars { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
+.stage.immersive .bar-block { gap: 5px; }
+.stage.immersive .imm-stop {
+  display: inline-flex; align-items: center; gap: 6px;
+  position: absolute; z-index: 7; top: max(8px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
+  height: 36px; padding-inline: 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font: 600 14px var(--font-body);
+}
+.stage.immersive.rot .imm-stop { top: max(8px, env(safe-area-inset-right)); right: max(14px, env(safe-area-inset-bottom)); }
 </style>
 
 </head>
@@ -540,6 +581,8 @@ tbody tr:last-child td { border-bottom: 0; }
         <button type="button" class="tap-pad" id="tapPad" aria-label="Gõ nhịp, tương đương phím Space"><span>Gõ</span><kbd>Space</kbd></button>
         <button type="button" class="btn-primary" id="startBtn">Bắt đầu</button>
       </div>
+
+      <button type="button" class="imm-stop" id="immStop" aria-label="Dừng bài tập">✕ Dừng</button>
 
       <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -751,6 +794,12 @@ tbody tr:last-child td { border-bottom: 0; }
             <div class="field-head"><label for="volumeIn">Âm lượng click</label><span class="val" id="volVal">80%</span></div>
             <input type="range" id="volumeIn" name="volume" min="0" max="100" step="1">
           </div>
+        </div>
+
+        <div class="group" id="immGroup" hidden>
+          <div class="sec-title">Điện thoại</div>
+          <label class="check"><input type="checkbox" id="immersiveIn" name="immersive"> Chơi toàn màn hình, xoay ngang</label>
+          <p class="hint">Khi bấm Bắt đầu, màn chơi phủ kín màn hình theo chiều ngang và chạm vào bất kỳ đâu cũng tính là một lần gõ. Nếu máy không tự xoay, hãy xoay ngang điện thoại.</p>
         </div>
 
         <fieldset id="fsLatency">
@@ -1126,7 +1175,7 @@ tbody tr:last-child td { border-bottom: 0; }
   const LS_HIST = 'nhipchuan:v1:history';
   const DEFAULTS = {
     bpm: 90, beats: 4, sub: 1, accent: true, length: 16, target: 85, diff: 'normal', gap: 'off', ramp: 'off',
-    sound: 'wood', subClick: true, volume: 80, latency: 0, source: 'metro', songClick: true, songVol: 80,
+    sound: 'wood', subClick: true, volume: 80, latency: 0, source: 'metro', songClick: true, songVol: 80, immersive: true,
   };
   const DIFF = {
     easy: { perfect: 0.040, good: 0.080, ok: 0.130, name: 'Dễ' },
@@ -1208,6 +1257,7 @@ tbody tr:last-child td { border-bottom: 0; }
       source: s.source === 'song' ? 'song' : 'metro',
       songClick: s.songClick !== false,
       songVol: clamp(Math.round(num(s.songVol, DEFAULTS.songVol)), 0, 100),
+      immersive: s.immersive !== false,
     };
   }
 
@@ -1484,15 +1534,16 @@ tbody tr:last-child td { border-bottom: 0; }
     stopAudition();
     if (phase === 'results') closeResults();
     phase = 'starting'; setStartBtn(); applyLocks();
+    enterImmersive(); // inside the tap/click gesture, so fullscreen and rotation are allowed
     await Promise.race([pr.catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
-    if (!A.ctx || A.ctx.state !== 'running') { phase = 'idle'; setStartBtn(); applyLocks(); toast('Chưa bật được âm thanh. Hãy bấm nút Bắt đầu lần nữa.'); return; }
+    if (!A.ctx || A.ctx.state !== 'running') { phase = 'idle'; setStartBtn(); applyLocks(); exitImmersive(); toast('Chưa bật được âm thanh. Hãy bấm nút Bắt đầu lần nữa.'); return; }
     const songMode = mode === 'play' && effSource() === 'song';
     clockDiff = null; sampleClock();
     let cfg, s;
     if (songMode) {
       cfg = songCfg();
       s = buildSongTimeline(cfg, A.ctx.currentTime + 0.35);
-      if (!s) { phase = 'idle'; setStartBtn(); applyLocks(); toast('Đoạn còn lại của bài quá ngắn. Hãy chọn chỗ bắt đầu sớm hơn.'); return; }
+      if (!s) { phase = 'idle'; setStartBtn(); applyLocks(); exitImmersive(); toast('Đoạn còn lại của bài quá ngắn. Hãy chọn chỗ bắt đầu sớm hơn.'); return; }
     } else {
       cfg = mode === 'calib'
         ? Object.assign({}, settings, { bpm: 100, beats: 4, sub: 1, accent: true, length: 6, gap: 'off', ramp: 'off', subClick: false, diff: 'normal' })
@@ -1617,7 +1668,7 @@ tbody tr:last-child td { border-bottom: 0; }
 
   function finishSession(aborted) {
     const s = S; if (!s || !isActive()) return;
-    stopTimer(); stopBus(s); releaseWakeLock();
+    stopTimer(); stopBus(s); releaseWakeLock(); exitImmersive();
     S = null; phase = 'idle';
     applyLocks(); setStartBtn(); showCountdown(null); showCalib(false);
     if (s.song) songDirty = true;
@@ -1656,6 +1707,53 @@ tbody tr:last-child td { border-bottom: 0; }
     try { if (navigator.wakeLock && document.visibilityState === 'visible') wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { wakeLock = null; }
   }
   function releaseWakeLock() { try { if (wakeLock) wakeLock.release(); } catch (e) { /* ignore */ } wakeLock = null; }
+
+  /* =============================== Phone play mode ===============================
+     Full-screen landscape stage; any touch on it is a tap. Android: Fullscreen API +
+     orientation lock. Where the screen cannot be rotated (iPhone, rotation lock),
+     the landscape layout is drawn turned 90° so the phone is simply held sideways. */
+  const touchDevice = () => !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  const immersiveWanted = () => settings.immersive && touchDevice();
+  const isImmersive = () => !!(el.stage && el.stage.classList.contains('immersive'));
+  function setAppSize() {
+    const rs = document.documentElement.style;
+    rs.setProperty('--appW', window.innerWidth + 'px');
+    rs.setProperty('--appH', window.innerHeight + 'px');
+    if (el.stage) el.stage.classList.toggle('rot', isImmersive() && window.innerHeight > window.innerWidth);
+    laneDirty = meterDirty = true;
+  }
+  function enterImmersive() {
+    if (!immersiveWanted() || isImmersive()) return;
+    document.documentElement.classList.add('imm-on');
+    el.stage.classList.add('immersive');
+    setAppSize();
+    const de = document.documentElement;
+    const req = de.requestFullscreen || de.webkitRequestFullscreen;
+    let p = Promise.resolve();
+    if (req && !(document.fullscreenElement || document.webkitFullscreenElement)) {
+      try { p = Promise.resolve(req.call(de, { navigationUI: 'hide' })); } catch (e) { /* not available */ }
+    }
+    p.catch(() => {}).then(() => {
+      if (!isImmersive()) return;
+      try {
+        const o = screen.orientation;
+        if (o && typeof o.lock === 'function') o.lock('landscape').catch(() => {}).then(() => setTimeout(setAppSize, 120));
+      } catch (e) { /* not available */ }
+      setTimeout(setAppSize, 250);
+    });
+  }
+  function exitImmersive() {
+    if (!isImmersive()) return;
+    el.stage.classList.remove('immersive', 'rot');
+    document.documentElement.classList.remove('imm-on');
+    try { const o = screen.orientation; if (o && typeof o.unlock === 'function') o.unlock(); } catch (e) { /* ignore */ }
+    try {
+      const fe = document.fullscreenElement || document.webkitFullscreenElement;
+      const ex = document.exitFullscreen || document.webkitExitFullscreen;
+      if (fe && ex) Promise.resolve(ex.call(document)).catch(() => {});
+    } catch (e) { /* ignore */ }
+    laneDirty = meterDirty = true;
+  }
 
   /* =============================== Song: load & analyse =============================== */
   function readFileBuffer(file) {
@@ -2075,7 +2173,7 @@ self.onmessage = (e) => {
   /* =============================== Canvas basics =============================== */
   function fitCanvas(cv) {
     let sz = sizes.get(cv);
-    if (!sz || !sz.w) { const r = cv.getBoundingClientRect(); sz = { w: r.width, h: r.height }; }
+    if (!sz || !sz.w) sz = { w: cv.clientWidth, h: cv.clientHeight }; // layout size, unaffected by the 90° turn
     if (sz.w < 2 || sz.h < 2) return null;
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     const w = Math.round(sz.w * dpr), h = Math.round(sz.h * dpr);
@@ -2084,7 +2182,7 @@ self.onmessage = (e) => {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     return { g, W: sz.w, H: sz.h };
   }
-  function laneW() { const sz = sizes.get(el.lane); return (sz && sz.w) || el.lane.getBoundingClientRect().width || 640; }
+  function laneW() { const sz = sizes.get(el.lane); return (sz && sz.w) || el.lane.clientWidth || 640; }
   function laneGeo(W, H) {
     const u = clamp(H / 180, 0.78, 1.2);
     return {
@@ -2113,7 +2211,8 @@ self.onmessage = (e) => {
     const live = !!(S && vt != null);
     const o = live ? S : preview; if (!o) return;
     const cfg = o.cfg, G = laneGeo(W, H), u = G.u;
-    const pps = live ? S.pps : ppsFor(cfg, W);
+    const pps = ppsFor(cfg, W); // follows the lane width, e.g. when the phone turns to landscape
+    if (live) S.pps = pps;
     const t = live ? vt : o.viewT;
     const X = (tt) => G.playX + (tt - t) * pps;
     const tMin = t - (G.playX - G.clefW + 40) / pps, tMax = t + (W - G.playX + 40) / pps;
@@ -2884,6 +2983,7 @@ self.onmessage = (e) => {
     el.targetIn.value = settings.target; el.gapIn.value = settings.gap; el.rampIn.value = settings.ramp;
     el.volumeIn.value = settings.volume; el.latencyIn.value = settings.latency;
     el.songClickIn.checked = settings.songClick; el.songVolIn.value = settings.songVol;
+    el.immersiveIn.checked = settings.immersive;
     syncLabels();
   }
   function syncLabels() {
@@ -2939,6 +3039,7 @@ self.onmessage = (e) => {
       case 'accent': case 'subClick': settings[t.name] = t.checked; break;
       case 'target': case 'latency': settings[t.name] = +t.value; break;
       case 'volume': settings.volume = +t.value; applyVolume(); break;
+      case 'immersive': settings.immersive = t.checked; settings = sanitize(settings); saveSettings(); return;
       default: return;
     }
     const prevBeats = preview ? preview.cfg.beats : settings.beats;
@@ -3000,7 +3101,8 @@ self.onmessage = (e) => {
       'fsSource', 'fsTempo', 'fsMeter', 'fsExercise', 'fsSound', 'fsLatency', 'sourceNote',
       'songSec', 'songDrop', 'songFile', 'songStatus', 'songProg', 'songStatusText', 'songBody', 'songBpmVal', 'songTempoName', 'songBpmPrecise',
       'songName', 'songDur', 'songBeats', 'songConf', 'songStab', 'songAlts', 'songStartLbl', 'waveCv', 'detailCv', 'songPlayBtn', 'songTime',
-      'songClickIn', 'songVolIn', 'dbPrev', 'dbNext', 'tempoNote', 'tempoCv', 'tempoTip', 'songPracticeBtn', 'songUseBpmBtn'];
+      'songClickIn', 'songVolIn', 'dbPrev', 'dbNext', 'tempoNote', 'tempoCv', 'tempoTip', 'songPracticeBtn', 'songUseBpmBtn',
+      'immStop', 'immGroup', 'immersiveIn'];
     for (const id of ids) el[id] = document.getElementById(id);
     el.form = document.getElementById('settings');
     el.srcMetro = document.getElementById('src-metro');
@@ -3025,6 +3127,19 @@ self.onmessage = (e) => {
     el.tapPad.addEventListener('click', (e) => { if (!busyNow()) onTapEvent(evTime(e)); });
     el.tapPad.addEventListener('mousedown', (e) => { if (isActive()) e.preventDefault(); });
     el.tapPad.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) onTapEvent(evTime(e)); } });
+    // phone play mode: every finger that touches the stage is one tap (except the Stop button)
+    el.stage.addEventListener('pointerdown', (e) => {
+      if (!isImmersive() || !isActive()) return;
+      if (e.target && e.target.closest && e.target.closest('.imm-stop')) return;
+      if (e.pointerType === 'mouse' && e.button > 0) return;
+      e.preventDefault();
+      onTapEvent(evTime(e));
+    }, { passive: false });
+    el.stage.addEventListener('contextmenu', (e) => { if (isImmersive()) e.preventDefault(); });
+    el.immStop.addEventListener('click', () => { if (isActive()) finishSession(true); else exitImmersive(); });
+    window.addEventListener('resize', setAppSize);
+    window.addEventListener('orientationchange', () => setTimeout(setAppSize, 150));
+    document.addEventListener('fullscreenchange', () => setTimeout(setAppSize, 60));
     el.calibBtn.addEventListener('click', () => {
       startSession('calib');
       const r = el.stage.getBoundingClientRect();
@@ -3169,6 +3284,8 @@ self.onmessage = (e) => {
     data = data || {};
     if (data.settings) settings = sanitize(data.settings);
     cacheEls();
+    el.immGroup.hidden = !touchDevice();
+    setAppSize();
     readColors();
     syncForm();
     refreshPreview();
