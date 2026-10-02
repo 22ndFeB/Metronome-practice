@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Nhịp Chuẩn">
+<meta name="apple-mobile-web-app-title" content="Metronome">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
-<title>Nhịp Chuẩn</title>
+<title>Metronome</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Chakra+Petch:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@500;600&display=swap">
@@ -109,7 +109,7 @@ kbd {
 }
 
 /* ---------- masthead ---------- */
-.masthead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 28px; }
+.masthead { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 28px; }
 .brand { min-width: 0; }
 .brand h1 {
   margin: 0;
@@ -119,6 +119,21 @@ kbd {
 .brand p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; max-width: 60ch; }
 .keys { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-2); }
 .keys li { display: inline-flex; align-items: center; gap: 6px; }
+/* language switch, top right of the masthead */
+.lang-switch {
+  position: absolute; top: 0; right: 0;
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 3px 3px 3px 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--track);
+  color: var(--muted);
+}
+.lang-switch svg { width: 15px; height: 15px; margin-right: 5px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.2; }
+.lang-switch button {
+  height: 28px; min-width: 40px; padding-inline: 9px;
+  border: 0; border-radius: 7px; background: transparent;
+  font: 600 12.5px var(--font-body); letter-spacing: 0.06em; color: var(--ink-2);
+}
+.lang-switch button:hover { color: var(--ink); }
+.lang-switch button[aria-pressed="true"] { background: var(--screen); color: var(--ink); box-shadow: 0 0 0 1px var(--line), var(--shadow-sm); cursor: default; }
 
 /* ---------- layout ---------- */
 .layout {
@@ -452,6 +467,9 @@ tbody tr:last-child td { border-bottom: 0; }
   .meter-row { grid-template-columns: minmax(0, 1fr); }
   .keys { display: none; }
   .drop { flex-basis: 100%; }
+  .lang-switch { top: -3px; }
+  .lang-switch button { height: 26px; min-width: 36px; padding-inline: 8px; }
+  .brand p { margin-top: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .led, .tap-pad, .tb-fill, .sp-track i { transition: none; }
@@ -506,18 +524,23 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
 <div class="app">
   <header class="masthead">
     <div class="brand">
-      <h1>Nhịp Chuẩn</h1>
-      <p>Luyện giữ nhịp cùng metronome hoặc theo chính bài hát của bạn. Gõ phím <kbd>Space</kbd> đúng lúc nốt chạm vạch đích.</p>
+      <h1>Metronome</h1>
+      <p data-i18n-html="tagline">Luyện giữ nhịp cùng metronome hoặc theo chính bài hát của bạn. Gõ phím <kbd>Space</kbd> đúng lúc nốt chạm vạch đích.</p>
     </div>
-    <ul class="keys" aria-label="Phím tắt">
-      <li><kbd>Space</kbd> gõ nhịp, bắt đầu</li>
-      <li><kbd>Esc</kbd> dừng</li>
-      <li><kbd>↑</kbd><kbd>↓</kbd> đổi tempo</li>
+    <div class="lang-switch" id="langSwitch" role="group" aria-label="Ngôn ngữ · Language">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.3"/><ellipse cx="8" cy="8" rx="2.7" ry="6.3"/><path d="M1.9 6h12.2M1.9 10h12.2"/></svg>
+      <button type="button" data-lang="vi" lang="vi" title="Tiếng Việt" aria-label="Tiếng Việt" aria-pressed="true">VI</button>
+      <button type="button" data-lang="en" lang="en" title="English" aria-label="English" aria-pressed="false">EN</button>
+    </div>
+    <ul class="keys" data-i18n-aria="keys.aria" aria-label="Phím tắt">
+      <li data-i18n-html="keys.space"><kbd>Space</kbd> gõ nhịp, bắt đầu</li>
+      <li data-i18n-html="keys.esc"><kbd>Esc</kbd> dừng</li>
+      <li data-i18n-html="keys.arrows"><kbd>↑</kbd><kbd>↓</kbd> đổi tempo</li>
     </ul>
   </header>
 
   <main class="layout">
-    <section class="stage" id="stage" aria-label="Màn luyện nhịp">
+    <section class="stage" id="stage" data-i18n-aria="stage.aria" aria-label="Màn luyện nhịp">
       <div class="readout">
         <div class="tempo">
           <svg class="pendulum" viewBox="0 0 32 44" aria-hidden="true">
@@ -531,58 +554,58 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
             <div class="tempo-name"><em id="tempoName">Andante</em><span id="meterLabel">4/4 · nốt đen</span></div>
           </div>
           <div class="bpm-steps">
-            <button type="button" class="step-btn" id="bpmUp" aria-label="Tăng 1 BPM">+</button>
-            <button type="button" class="step-btn" id="bpmDown" aria-label="Giảm 1 BPM">−</button>
+            <button type="button" class="step-btn" id="bpmUp" data-i18n-aria="bpm.up" aria-label="Tăng 1 BPM">+</button>
+            <button type="button" class="step-btn" id="bpmDown" data-i18n-aria="bpm.down" aria-label="Giảm 1 BPM">−</button>
           </div>
         </div>
         <div class="leds" id="leds" aria-hidden="true"></div>
         <dl class="scoreboard">
-          <div><dt>Điểm</dt><dd id="score">0</dd></div>
-          <div><dt>Combo</dt><dd id="combo">0</dd></div>
-          <div><dt>Chính xác</dt><dd id="acc">—</dd></div>
+          <div><dt data-i18n="sb.score">Điểm</dt><dd id="score">0</dd></div>
+          <div><dt data-i18n="sb.combo">Combo</dt><dd id="combo">0</dd></div>
+          <div><dt data-i18n="sb.acc">Chính xác</dt><dd id="acc">—</dd></div>
         </dl>
       </div>
 
       <div class="lane-wrap" id="laneWrap">
-        <canvas id="lane" role="img" aria-label="Khuông nhạc một dòng: nốt chạy từ phải sang trái, gõ khi nốt chạm vạch đích"></canvas>
-        <div class="lane-hint" id="laneHint"><kbd>Space</kbd> hoặc chạm Gõ để bắt đầu</div>
+        <canvas id="lane" role="img" data-i18n-aria="lane.aria" aria-label="Khuông nhạc một dòng: nốt chạy từ phải sang trái, gõ khi nốt chạm vạch đích"></canvas>
+        <div class="lane-hint" id="laneHint" data-i18n-html="lane.hint"><kbd>Space</kbd> hoặc chạm Gõ để bắt đầu</div>
         <div class="calib" id="calib" hidden>
-          <h3>Đo độ trễ</h3>
-          <p>Nghe 4 tiếng đếm vào, rồi gõ Space (hoặc chạm Gõ) trùng với từng tiếng click. Nên nhắm mắt và chỉ nghe.</p>
-          <p class="calib-stat"><span class="big" id="calibCount">0</span> / 24 lần gõ · trung vị <strong id="calibMed">—</strong></p>
+          <h3 data-i18n="calib.title">Đo độ trễ</h3>
+          <p data-i18n="calib.body">Nghe 4 tiếng đếm vào, rồi gõ Space (hoặc chạm Gõ) trùng với từng tiếng click. Nên nhắm mắt và chỉ nghe.</p>
+          <p class="calib-stat"><span class="big" id="calibCount">0</span> <span data-i18n="calib.stat">/ 24 lần gõ · trung vị</span> <strong id="calibMed">—</strong></p>
         </div>
-        <div class="countdown" id="countdown" hidden><span id="countNum">1</span><small>Đếm vào</small></div>
+        <div class="countdown" id="countdown" hidden><span id="countNum">1</span><small data-i18n="countin">Đếm vào</small></div>
       </div>
 
       <div class="meter-block">
         <div class="row-head">
-          <span class="row-title">Độ lệch so với phách</span>
-          <span class="row-vals">Lần cuối <strong id="lastOff">—</strong> · TB 12 nốt <strong id="avgOff">—</strong></span>
+          <span class="row-title" data-i18n="meter.title">Độ lệch so với phách</span>
+          <span class="row-vals"><span data-i18n="meter.last">Lần cuối</span> <strong id="lastOff">—</strong> · <span data-i18n="meter.avg">TB 12 nốt</span> <strong id="avgOff">—</strong></span>
         </div>
         <div class="meter-row">
-          <span class="side">Sớm</span>
-          <canvas id="meter" role="img" aria-label="Thanh độ lệch: giữa là đúng phách, bên trái là gõ sớm, bên phải là gõ muộn"></canvas>
-          <span class="side">Muộn</span>
+          <span class="side" data-i18n="meter.early">Sớm</span>
+          <canvas id="meter" role="img" data-i18n-aria="meter.aria" aria-label="Thanh độ lệch: giữa là đúng phách, bên trái là gõ sớm, bên phải là gõ muộn"></canvas>
+          <span class="side" data-i18n="meter.late">Muộn</span>
         </div>
       </div>
 
       <div class="bars">
         <div class="bar-block">
-          <div class="row-head"><span class="row-title">Tiến trình</span><span class="row-vals" id="progLabel">16 ô</span></div>
+          <div class="row-head"><span class="row-title" data-i18n="prog.title">Tiến trình</span><span class="row-vals" id="progLabel">16 ô</span></div>
           <div class="progress" id="progress" aria-hidden="true"></div>
         </div>
         <div class="bar-block">
-          <div class="row-head"><span class="row-title">Độ chính xác</span><span class="row-vals" id="accLabel">— · mục tiêu 85%</span></div>
-          <div class="target-bar" id="targetBar"><div class="tb-fill" id="accFill"></div><div class="tb-mark" id="targetMark" title="Mục tiêu"></div></div>
+          <div class="row-head"><span class="row-title" data-i18n="acc.title">Độ chính xác</span><span class="row-vals" id="accLabel">— · mục tiêu 85%</span></div>
+          <div class="target-bar" id="targetBar"><div class="tb-fill" id="accFill"></div><div class="tb-mark" id="targetMark" data-i18n-title="acc.target" title="Mục tiêu"></div></div>
         </div>
       </div>
 
       <div class="controls">
-        <button type="button" class="tap-pad" id="tapPad" aria-label="Gõ nhịp, tương đương phím Space"><span>Gõ</span><kbd>Space</kbd></button>
+        <button type="button" class="tap-pad" id="tapPad" data-i18n-aria="tap.aria" aria-label="Gõ nhịp, tương đương phím Space"><span data-i18n="tap">Gõ</span></button>
         <button type="button" class="btn-primary" id="startBtn">Bắt đầu</button>
       </div>
 
-      <button type="button" class="imm-stop" id="immStop" aria-label="Dừng bài tập">✕ Dừng</button>
+      <button type="button" class="imm-stop" id="immStop" data-i18n="imm.stop" data-i18n-aria="imm.stopAria" aria-label="Dừng bài tập">✕ Dừng</button>
 
       <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -590,48 +613,48 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
         <div class="res-head">
           <div class="grade" id="resGrade">A</div>
           <div class="res-main">
-            <p class="res-verdict" id="resVerdict">Đạt mục tiêu</p>
-            <p class="res-acc"><strong id="resAcc">0%</strong><span>độ chính xác · mục tiêu <span id="resTarget">85%</span></span></p>
+            <p class="res-verdict" id="resVerdict"></p>
+            <p class="res-acc"><strong id="resAcc">0%</strong><span><span data-i18n="res.accOf">độ chính xác · mục tiêu</span> <span id="resTarget">85%</span></span></p>
             <p class="res-meta" id="resMeta"></p>
           </div>
           <div class="res-actions">
-            <button type="button" class="btn-primary" id="againBtn">Chơi lại <kbd>Space</kbd></button>
-            <button type="button" class="btn-secondary" id="nextBtn">Thử 95 BPM</button>
-            <button type="button" class="btn-ghost" id="closeRes">Đóng</button>
+            <button type="button" class="btn-primary" id="againBtn" data-i18n-html="res.again">Chơi lại <kbd>Space</kbd></button>
+            <button type="button" class="btn-secondary" id="nextBtn"></button>
+            <button type="button" class="btn-ghost" id="closeRes" data-i18n="res.close">Đóng</button>
           </div>
         </div>
         <dl class="res-stats" id="resStats"></dl>
         <div class="res-chart">
-          <div class="chart-head"><h3>Độ lệch từng nốt (ms)</h3><ul class="legend" id="resLegend"></ul></div>
+          <div class="chart-head"><h3 data-i18n="res.chartTitle">Độ lệch từng nốt (ms)</h3><ul class="legend" id="resLegend"></ul></div>
           <div class="chart-box">
-            <canvas id="resChart" tabindex="0" role="img" aria-label="Biểu đồ độ lệch từng nốt theo thời gian. Dùng phím mũi tên trái phải để xem từng nốt."></canvas>
+            <canvas id="resChart" tabindex="0" role="img" data-i18n-aria="res.chartAria" aria-label="Biểu đồ độ lệch từng nốt theo thời gian. Dùng phím mũi tên trái phải để xem từng nốt."></canvas>
             <div class="tip" id="resTip" hidden></div>
           </div>
         </div>
         <div class="res-bars">
-          <div class="row-head"><span class="row-title">Từng ô nhịp</span><span class="row-vals" id="resBarsNote"></span></div>
+          <div class="row-head"><span class="row-title" data-i18n="res.byBar">Từng ô nhịp</span><span class="row-vals" id="resBarsNote"></span></div>
           <div class="progress" id="resBars"></div>
         </div>
         <ul class="res-tips" id="resTips"></ul>
-        <details class="res-table"><summary>Xem dạng bảng theo ô nhịp</summary><div class="table-wrap"><table id="resTable"></table></div></details>
+        <details class="res-table"><summary data-i18n="res.tableToggle">Xem dạng bảng theo ô nhịp</summary><div class="table-wrap"><table id="resTable"></table></div></details>
       </section>
     </section>
 
     <section class="song" id="songSec" aria-labelledby="songTitle">
       <div class="song-top">
         <div class="song-intro">
-          <h2 id="songTitle">Phân tích beat</h2>
-          <p>Tải một bài hát lên để tìm tempo và vị trí từng beat, nghe thử kèm tiếng click, rồi luyện gõ theo chính bài đó. File được xử lý ngay trong trình duyệt của bạn, không gửi đi đâu.</p>
+          <h2 id="songTitle" data-i18n="song.title">Phân tích beat</h2>
+          <p data-i18n="song.intro">Tải một bài hát lên để tìm tempo và vị trí từng beat, nghe thử kèm tiếng click, rồi luyện gõ theo chính bài đó. File được xử lý ngay trong trình duyệt của bạn, không gửi đi đâu.</p>
         </div>
         <label class="drop" id="songDrop">
           <input type="file" id="songFile" class="sr-only" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.oga,.opus,.flac,.webm,.mp4">
-          <span class="drop-main">Chọn file nhạc</span>
-          <span class="drop-sub">hoặc kéo thả vào đây · MP3, WAV, M4A, OGG, FLAC</span>
+          <span class="drop-main" data-i18n="song.choose">Chọn file nhạc</span>
+          <span class="drop-sub" data-i18n="song.dropSub">hoặc kéo thả vào đây · MP3, WAV, M4A, OGG, FLAC</span>
         </label>
       </div>
       <div class="song-status" id="songStatus" role="status" aria-live="polite" hidden>
         <div class="sp-track"><i id="songProg"></i></div>
-        <span id="songStatusText">Đang đọc file…</span>
+        <span id="songStatusText"></span>
       </div>
       <div class="song-body" id="songBody" hidden>
         <div class="song-summary">
@@ -640,56 +663,56 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
             <div class="tempo-name"><em id="songTempoName">Allegro</em><span id="songBpmPrecise">120 BPM</span></div>
           </div>
           <dl class="song-facts">
-            <div><dt>Bài</dt><dd class="name" id="songName">—</dd></div>
-            <div><dt>Thời lượng</dt><dd id="songDur">—</dd></div>
-            <div><dt>Số beat</dt><dd id="songBeats">—</dd></div>
-            <div><dt>Độ rõ nhịp</dt><dd id="songConf">—</dd></div>
-            <div><dt>Độ đều</dt><dd id="songStab">—</dd></div>
+            <div><dt data-i18n="song.name">Bài</dt><dd class="name" id="songName">—</dd></div>
+            <div><dt data-i18n="song.dur">Thời lượng</dt><dd id="songDur">—</dd></div>
+            <div><dt data-i18n="song.beats">Số beat</dt><dd id="songBeats">—</dd></div>
+            <div><dt data-i18n="song.conf">Độ rõ nhịp</dt><dd id="songConf">—</dd></div>
+            <div><dt data-i18n="song.stab">Độ đều</dt><dd id="songStab">—</dd></div>
           </dl>
         </div>
-        <div class="alts"><span>Nghe thấy nhanh hoặc chậm gấp đôi? Chọn tempo khác:</span><span id="songAlts" class="alts"></span></div>
+        <div class="alts"><span data-i18n="song.alts">Nghe thấy nhanh hoặc chậm gấp đôi? Chọn tempo khác:</span><span id="songAlts" class="alts"></span></div>
         <div class="view-block">
-          <div class="row-head"><span class="row-title">Sóng âm và beat</span><span class="row-vals" id="songStartLbl"></span></div>
-          <div class="wave-box"><canvas id="waveCv" tabindex="0" role="img" aria-label="Sóng âm của bài. Bấm để chọn chỗ bắt đầu luyện, hoặc dùng phím mũi tên trái phải để dời từng ô nhịp."></canvas></div>
-          <div class="detail-box"><canvas id="detailCv" role="img" aria-label="Phóng to quanh vị trí đang nghe: đường độ mạnh âm bật lên và vạch beat"></canvas></div>
-          <p class="hint">Bấm vào sóng âm để chọn chỗ bắt đầu luyện. Vạch nhỏ trên cùng là phách 1 của mỗi ô, vùng tô màu là đoạn sẽ được chấm. Khung dưới phóng to quanh chỗ đang nghe: vạch beat nên trùng các đỉnh âm.</p>
+          <div class="row-head"><span class="row-title" data-i18n="song.wave">Sóng âm và beat</span><span class="row-vals" id="songStartLbl"></span></div>
+          <div class="wave-box"><canvas id="waveCv" tabindex="0" role="img" data-i18n-aria="song.waveAria" aria-label="Sóng âm của bài. Bấm để chọn chỗ bắt đầu luyện, hoặc dùng phím mũi tên trái phải để dời từng ô nhịp."></canvas></div>
+          <div class="detail-box"><canvas id="detailCv" role="img" data-i18n-aria="song.detailAria" aria-label="Phóng to quanh vị trí đang nghe: đường độ mạnh âm bật lên và vạch beat"></canvas></div>
+          <p class="hint" data-i18n="song.waveHint">Bấm vào sóng âm để chọn chỗ bắt đầu luyện. Vạch nhỏ trên cùng là phách 1 của mỗi ô, vùng tô màu là đoạn sẽ được chấm. Khung dưới phóng to quanh chỗ đang nghe: vạch beat nên trùng các đỉnh âm.</p>
         </div>
         <div class="song-controls">
           <button type="button" class="btn-secondary" id="songPlayBtn">Nghe thử</button>
           <span class="song-time" id="songTime">0:00 / 0:00</span>
-          <label class="check"><input type="checkbox" id="songClickIn"> Kèm click theo beat</label>
-          <label class="inline-field" for="songVolIn">Âm lượng bài <input type="range" id="songVolIn" min="0" max="100" step="1"></label>
-          <span class="inline-field">Phách 1
-            <button type="button" class="db-btn" id="dbPrev" aria-label="Dời phách 1 sớm hơn một phách">◀</button>
-            <button type="button" class="db-btn" id="dbNext" aria-label="Dời phách 1 muộn hơn một phách">▶</button>
+          <label class="check"><input type="checkbox" id="songClickIn"> <span data-i18n="song.click">Kèm click theo beat</span></label>
+          <label class="inline-field" for="songVolIn"><span data-i18n="song.vol">Âm lượng bài</span> <input type="range" id="songVolIn" min="0" max="100" step="1"></label>
+          <span class="inline-field"><span data-i18n="song.db">Phách 1</span>
+            <button type="button" class="db-btn" id="dbPrev" data-i18n-aria="song.dbPrev" aria-label="Dời phách 1 sớm hơn một phách">◀</button>
+            <button type="button" class="db-btn" id="dbNext" data-i18n-aria="song.dbNext" aria-label="Dời phách 1 muộn hơn một phách">▶</button>
           </span>
         </div>
         <div class="view-block">
-          <div class="row-head"><span class="row-title">Tempo theo thời gian</span><span class="row-vals" id="tempoNote"></span></div>
-          <div class="tempo-box"><canvas id="tempoCv" tabindex="0" role="img" aria-label="Biểu đồ tempo từng beat theo thời gian"></canvas><div class="tip" id="tempoTip" hidden></div></div>
+          <div class="row-head"><span class="row-title" data-i18n="song.tempoTitle">Tempo theo thời gian</span><span class="row-vals" id="tempoNote"></span></div>
+          <div class="tempo-box"><canvas id="tempoCv" tabindex="0" role="img" data-i18n-aria="song.tempoAria" aria-label="Biểu đồ tempo từng beat theo thời gian"></canvas><div class="tip" id="tempoTip" hidden></div></div>
         </div>
         <div class="song-actions">
-          <button type="button" class="btn-primary" id="songPracticeBtn">Gõ theo bài này</button>
-          <button type="button" class="btn-secondary" id="songUseBpmBtn">Dùng 120 BPM cho metronome</button>
+          <button type="button" class="btn-primary" id="songPracticeBtn" data-i18n="song.practice">Gõ theo bài này</button>
+          <button type="button" class="btn-secondary" id="songUseBpmBtn"></button>
         </div>
       </div>
     </section>
 
     <aside class="panel" aria-labelledby="panelTitle">
       <form id="settings" autocomplete="off">
-        <h2 class="panel-title" id="panelTitle">Thiết lập</h2>
+        <h2 class="panel-title" id="panelTitle" data-i18n="set.title">Thiết lập</h2>
 
         <fieldset id="fsSource">
-          <div class="sec-title">Nguồn nhịp</div>
-          <div class="seg-ctl" role="radiogroup" aria-label="Nguồn nhịp">
-            <label><input type="radio" name="source" id="src-metro" value="metro"><span class="pill">Metronome</span></label>
-            <label><input type="radio" name="source" id="src-song" value="song"><span class="pill">Bài hát</span></label>
+          <div class="sec-title" data-i18n="set.source">Nguồn nhịp</div>
+          <div class="seg-ctl" role="radiogroup" data-i18n-aria="set.source" aria-label="Nguồn nhịp">
+            <label><input type="radio" name="source" id="src-metro" value="metro"><span class="pill" data-i18n="src.metro">Metronome</span></label>
+            <label><input type="radio" name="source" id="src-song" value="song"><span class="pill" data-i18n="src.song">Bài hát</span></label>
           </div>
           <p class="hint" id="sourceNote">Tải một bài ở mục Phân tích beat để gõ theo nhạc.</p>
         </fieldset>
 
         <fieldset id="fsTempo">
-          <div class="sec-title">Nhịp độ</div>
+          <div class="sec-title" data-i18n="set.tempoSec">Nhịp độ</div>
           <div class="field">
             <div class="field-head">
               <label for="bpmRange">Tempo</label>
@@ -703,9 +726,9 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
         </fieldset>
 
         <fieldset id="fsMeter">
-          <div class="sec-title">Nhịp và chia phách</div>
+          <div class="sec-title" data-i18n="set.meterSec">Nhịp và chia phách</div>
           <div class="field">
-            <div class="field-head"><span id="beatsLbl">Số phách mỗi ô</span></div>
+            <div class="field-head"><span id="beatsLbl" data-i18n="set.beats">Số phách mỗi ô</span></div>
             <div class="seg-ctl" role="radiogroup" aria-labelledby="beatsLbl">
               <label><input type="radio" name="beats" id="beats-2" value="2"><span class="pill">2/4</span></label>
               <label><input type="radio" name="beats" id="beats-3" value="3"><span class="pill">3/4</span></label>
@@ -716,100 +739,100 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
             </div>
           </div>
           <div class="field">
-            <div class="field-head"><span id="subLbl">Gõ theo</span><span class="val" id="subVal">nốt đen</span></div>
+            <div class="field-head"><span id="subLbl" data-i18n="set.sub">Gõ theo</span><span class="val" id="subVal">nốt đen</span></div>
             <div class="seg-ctl" role="radiogroup" aria-labelledby="subLbl">
-              <label title="Nốt đen: 1 lần mỗi phách"><input type="radio" name="sub" id="sub-1" value="1" aria-label="Nốt đen, 1 lần mỗi phách"><span class="pill"><svg viewBox="0 0 28 24" aria-hidden="true"><ellipse cx="11.5" cy="18.4" rx="4.4" ry="3.1" transform="rotate(-20 11.5 18.4)"/><rect x="15" y="3" width="1.6" height="15.4"/></svg></span></label>
-              <label title="Móc đơn: 2 lần mỗi phách"><input type="radio" name="sub" id="sub-2" value="2" aria-label="Móc đơn, 2 lần mỗi phách"><span class="pill"><svg viewBox="0 0 28 24" aria-hidden="true"><ellipse cx="6.5" cy="18.4" rx="4" ry="2.9" transform="rotate(-20 6.5 18.4)"/><ellipse cx="20" cy="18.4" rx="4" ry="2.9" transform="rotate(-20 20 18.4)"/><rect x="9.6" y="4" width="1.5" height="14.4"/><rect x="23.1" y="4" width="1.5" height="14.4"/><rect x="9.6" y="3.2" width="15" height="3"/></svg></span></label>
-              <label title="Liên ba: 3 lần mỗi phách"><input type="radio" name="sub" id="sub-3" value="3" aria-label="Liên ba, 3 lần mỗi phách"><span class="pill"><svg viewBox="0 0 30 24" aria-hidden="true"><ellipse cx="4.6" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 4.6 18.6)"/><ellipse cx="14" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 14 18.6)"/><ellipse cx="23.4" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 23.4 18.6)"/><rect x="7.2" y="8" width="1.4" height="10.6"/><rect x="16.6" y="8" width="1.4" height="10.6"/><rect x="26" y="8" width="1.4" height="10.6"/><rect x="7.2" y="7.2" width="20.2" height="2.6"/><text x="17.3" y="5.6" font-size="6.5" font-style="italic" font-weight="700" text-anchor="middle">3</text></svg></span></label>
-              <label title="Móc kép: 4 lần mỗi phách"><input type="radio" name="sub" id="sub-4" value="4" aria-label="Móc kép, 4 lần mỗi phách"><span class="pill"><svg viewBox="0 0 30 24" aria-hidden="true"><ellipse cx="3.8" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 3.8 18.8)"/><ellipse cx="11.2" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 11.2 18.8)"/><ellipse cx="18.6" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 18.6 18.8)"/><ellipse cx="26" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 26 18.8)"/><rect x="6.1" y="4" width="1.3" height="14.6"/><rect x="13.5" y="4" width="1.3" height="14.6"/><rect x="20.9" y="4" width="1.3" height="14.6"/><rect x="28.3" y="4" width="1.3" height="14.6"/><rect x="6.1" y="3.4" width="23.5" height="2.4"/><rect x="6.1" y="7.2" width="23.5" height="2.4"/></svg></span></label>
+              <label data-i18n-title="sub.1t" title="Nốt đen: 1 lần mỗi phách"><input type="radio" name="sub" id="sub-1" value="1" data-i18n-aria="sub.1t" aria-label="Nốt đen: 1 lần mỗi phách"><span class="pill"><svg viewBox="0 0 28 24" aria-hidden="true"><ellipse cx="11.5" cy="18.4" rx="4.4" ry="3.1" transform="rotate(-20 11.5 18.4)"/><rect x="15" y="3" width="1.6" height="15.4"/></svg></span></label>
+              <label data-i18n-title="sub.2t" title="Móc đơn: 2 lần mỗi phách"><input type="radio" name="sub" id="sub-2" value="2" data-i18n-aria="sub.2t" aria-label="Móc đơn: 2 lần mỗi phách"><span class="pill"><svg viewBox="0 0 28 24" aria-hidden="true"><ellipse cx="6.5" cy="18.4" rx="4" ry="2.9" transform="rotate(-20 6.5 18.4)"/><ellipse cx="20" cy="18.4" rx="4" ry="2.9" transform="rotate(-20 20 18.4)"/><rect x="9.6" y="4" width="1.5" height="14.4"/><rect x="23.1" y="4" width="1.5" height="14.4"/><rect x="9.6" y="3.2" width="15" height="3"/></svg></span></label>
+              <label data-i18n-title="sub.3t" title="Liên ba: 3 lần mỗi phách"><input type="radio" name="sub" id="sub-3" value="3" data-i18n-aria="sub.3t" aria-label="Liên ba: 3 lần mỗi phách"><span class="pill"><svg viewBox="0 0 30 24" aria-hidden="true"><ellipse cx="4.6" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 4.6 18.6)"/><ellipse cx="14" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 14 18.6)"/><ellipse cx="23.4" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 23.4 18.6)"/><rect x="7.2" y="8" width="1.4" height="10.6"/><rect x="16.6" y="8" width="1.4" height="10.6"/><rect x="26" y="8" width="1.4" height="10.6"/><rect x="7.2" y="7.2" width="20.2" height="2.6"/><text x="17.3" y="5.6" font-size="6.5" font-style="italic" font-weight="700" text-anchor="middle">3</text></svg></span></label>
+              <label data-i18n-title="sub.4t" title="Móc kép: 4 lần mỗi phách"><input type="radio" name="sub" id="sub-4" value="4" data-i18n-aria="sub.4t" aria-label="Móc kép: 4 lần mỗi phách"><span class="pill"><svg viewBox="0 0 30 24" aria-hidden="true"><ellipse cx="3.8" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 3.8 18.8)"/><ellipse cx="11.2" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 11.2 18.8)"/><ellipse cx="18.6" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 18.6 18.8)"/><ellipse cx="26" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 26 18.8)"/><rect x="6.1" y="4" width="1.3" height="14.6"/><rect x="13.5" y="4" width="1.3" height="14.6"/><rect x="20.9" y="4" width="1.3" height="14.6"/><rect x="28.3" y="4" width="1.3" height="14.6"/><rect x="6.1" y="3.4" width="23.5" height="2.4"/><rect x="6.1" y="7.2" width="23.5" height="2.4"/></svg></span></label>
             </div>
           </div>
-          <label class="check"><input type="checkbox" id="accentIn" name="accent"> Nhấn mạnh phách đầu ô nhịp</label>
+          <label class="check"><input type="checkbox" id="accentIn" name="accent"> <span data-i18n="set.accent">Nhấn mạnh phách đầu ô nhịp</span></label>
         </fieldset>
 
         <fieldset id="fsExercise">
-          <div class="sec-title">Bài tập</div>
+          <div class="sec-title" data-i18n="set.exercise">Bài tập</div>
           <div class="field">
-            <div class="field-head"><span id="lenLbl">Độ dài</span></div>
+            <div class="field-head"><span id="lenLbl" data-i18n="set.length">Độ dài</span></div>
             <div class="seg-ctl" role="radiogroup" aria-labelledby="lenLbl">
-              <label><input type="radio" name="length" id="len-8" value="8"><span class="pill">8 ô</span></label>
-              <label><input type="radio" name="length" id="len-16" value="16"><span class="pill">16 ô</span></label>
-              <label><input type="radio" name="length" id="len-32" value="32"><span class="pill">32 ô</span></label>
-              <label><input type="radio" name="length" id="len-64" value="64"><span class="pill">64 ô</span></label>
-              <label title="Không giới hạn (với bài hát: đến hết bài), bấm Dừng để xem kết quả"><input type="radio" name="length" id="len-0" value="0" aria-label="Không giới hạn"><span class="pill">∞</span></label>
+              <label><input type="radio" name="length" id="len-8" value="8"><span class="pill" data-i18n="len.pill" data-i18n-args='{"n":8}'>8 ô</span></label>
+              <label><input type="radio" name="length" id="len-16" value="16"><span class="pill" data-i18n="len.pill" data-i18n-args='{"n":16}'>16 ô</span></label>
+              <label><input type="radio" name="length" id="len-32" value="32"><span class="pill" data-i18n="len.pill" data-i18n-args='{"n":32}'>32 ô</span></label>
+              <label><input type="radio" name="length" id="len-64" value="64"><span class="pill" data-i18n="len.pill" data-i18n-args='{"n":64}'>64 ô</span></label>
+              <label data-i18n-title="len.inf" title="Không giới hạn (với bài hát: đến hết bài), bấm Dừng để xem kết quả"><input type="radio" name="length" id="len-0" value="0" data-i18n-aria="len.infAria" aria-label="Không giới hạn"><span class="pill">∞</span></label>
             </div>
           </div>
           <div class="field">
-            <div class="field-head"><label for="targetIn">Mục tiêu độ chính xác</label><span class="val" id="targetVal">85%</span></div>
+            <div class="field-head"><label for="targetIn" data-i18n="set.target">Mục tiêu độ chính xác</label><span class="val" id="targetVal">85%</span></div>
             <input type="range" id="targetIn" name="target" min="50" max="100" step="5">
           </div>
           <div class="field">
-            <div class="field-head"><span id="diffLbl">Độ khó (cửa sổ chấm)</span></div>
+            <div class="field-head"><span id="diffLbl" data-i18n="set.diff">Độ khó (cửa sổ chấm)</span></div>
             <div class="seg-ctl" role="radiogroup" aria-labelledby="diffLbl">
-              <label><input type="radio" name="diff" id="diff-easy" value="easy"><span class="pill">Dễ</span></label>
-              <label><input type="radio" name="diff" id="diff-normal" value="normal"><span class="pill">Vừa</span></label>
-              <label><input type="radio" name="diff" id="diff-hard" value="hard"><span class="pill">Khó</span></label>
+              <label><input type="radio" name="diff" id="diff-easy" value="easy"><span class="pill" data-i18n="diff.easy">Dễ</span></label>
+              <label><input type="radio" name="diff" id="diff-normal" value="normal"><span class="pill" data-i18n="diff.normal">Vừa</span></label>
+              <label><input type="radio" name="diff" id="diff-hard" value="hard"><span class="pill" data-i18n="diff.hard">Khó</span></label>
             </div>
             <p class="hint" id="diffNote"></p>
           </div>
           <div class="field">
-            <label class="field-head" for="gapIn">Click ngắt quãng</label>
+            <label class="field-head" for="gapIn" data-i18n="set.gap">Click ngắt quãng</label>
             <select id="gapIn" name="gap">
-              <option value="off">Tắt, click kêu mọi ô</option>
-              <option value="3-1">3 ô có click, 1 ô im</option>
-              <option value="2-2">2 ô có click, 2 ô im</option>
-              <option value="1-1">1 ô có click, 1 ô im</option>
-              <option value="4-4">4 ô có click, 4 ô im</option>
-              <option value="1-3">1 ô có click, 3 ô im</option>
+              <option value="off" data-i18n="gap.off">Tắt, click kêu mọi ô</option>
+              <option value="3-1" data-i18n="gap.opt" data-i18n-args='{"a":3,"b":1}'>3 ô có click, 1 ô im</option>
+              <option value="2-2" data-i18n="gap.opt" data-i18n-args='{"a":2,"b":2}'>2 ô có click, 2 ô im</option>
+              <option value="1-1" data-i18n="gap.opt" data-i18n-args='{"a":1,"b":1}'>1 ô có click, 1 ô im</option>
+              <option value="4-4" data-i18n="gap.opt" data-i18n-args='{"a":4,"b":4}'>4 ô có click, 4 ô im</option>
+              <option value="1-3" data-i18n="gap.opt" data-i18n-args='{"a":1,"b":3}'>1 ô có click, 3 ô im</option>
             </select>
-            <p class="hint">Ô im không có tiếng click và nốt bị ẩn. Bạn vẫn gõ đều để luyện nhịp trong đầu.</p>
+            <p class="hint" data-i18n="gap.hint">Ô im không có tiếng click và nốt bị ẩn. Bạn vẫn gõ đều để luyện nhịp trong đầu.</p>
           </div>
           <div class="field">
-            <label class="field-head" for="rampIn">Tăng tốc dần</label>
+            <label class="field-head" for="rampIn" data-i18n="set.ramp">Tăng tốc dần</label>
             <select id="rampIn" name="ramp">
-              <option value="off">Tắt</option>
-              <option value="2-4">+2 BPM sau mỗi 4 ô</option>
-              <option value="5-4">+5 BPM sau mỗi 4 ô</option>
-              <option value="5-8">+5 BPM sau mỗi 8 ô</option>
-              <option value="10-8">+10 BPM sau mỗi 8 ô</option>
+              <option value="off" data-i18n="ramp.off">Tắt</option>
+              <option value="2-4" data-i18n="ramp.opt" data-i18n-args='{"a":2,"b":4}'>+2 BPM sau mỗi 4 ô</option>
+              <option value="5-4" data-i18n="ramp.opt" data-i18n-args='{"a":5,"b":4}'>+5 BPM sau mỗi 4 ô</option>
+              <option value="5-8" data-i18n="ramp.opt" data-i18n-args='{"a":5,"b":8}'>+5 BPM sau mỗi 8 ô</option>
+              <option value="10-8" data-i18n="ramp.opt" data-i18n-args='{"a":10,"b":8}'>+10 BPM sau mỗi 8 ô</option>
             </select>
           </div>
         </fieldset>
 
         <fieldset id="fsSound">
-          <div class="sec-title">Âm thanh</div>
+          <div class="sec-title" data-i18n="set.sound">Âm thanh</div>
           <div class="field">
-            <div class="field-head"><span id="soundLbl">Tiếng click</span></div>
+            <div class="field-head"><span id="soundLbl" data-i18n="set.clickSound">Tiếng click</span></div>
             <div class="seg-ctl" role="radiogroup" aria-labelledby="soundLbl">
-              <label><input type="radio" name="sound" id="sound-wood" value="wood"><span class="pill">Mõ gỗ</span></label>
-              <label><input type="radio" name="sound" id="sound-click" value="click"><span class="pill">Click</span></label>
-              <label><input type="radio" name="sound" id="sound-beep" value="beep"><span class="pill">Bíp</span></label>
+              <label><input type="radio" name="sound" id="sound-wood" value="wood"><span class="pill" data-i18n="sound.wood">Mõ gỗ</span></label>
+              <label><input type="radio" name="sound" id="sound-click" value="click"><span class="pill" data-i18n="sound.click">Click</span></label>
+              <label><input type="radio" name="sound" id="sound-beep" value="beep"><span class="pill" data-i18n="sound.beep">Bíp</span></label>
             </div>
           </div>
-          <label class="check"><input type="checkbox" id="subClickIn" name="subClick"> Kêu cả các nốt chia phách</label>
+          <label class="check"><input type="checkbox" id="subClickIn" name="subClick"> <span data-i18n="set.subClick">Kêu cả các nốt chia phách</span></label>
         </fieldset>
 
         <div class="group">
           <div class="field">
-            <div class="field-head"><label for="volumeIn">Âm lượng click</label><span class="val" id="volVal">80%</span></div>
+            <div class="field-head"><label for="volumeIn" data-i18n="set.volume">Âm lượng click</label><span class="val" id="volVal">80%</span></div>
             <input type="range" id="volumeIn" name="volume" min="0" max="100" step="1">
           </div>
         </div>
 
         <div class="group" id="immGroup" hidden>
-          <div class="sec-title">Điện thoại</div>
-          <label class="check"><input type="checkbox" id="immersiveIn" name="immersive"> Chơi toàn màn hình, xoay ngang</label>
-          <p class="hint">Khi bấm Bắt đầu, màn chơi phủ kín màn hình theo chiều ngang và chạm vào bất kỳ đâu cũng tính là một lần gõ. Nếu máy không tự xoay, hãy xoay ngang điện thoại.</p>
+          <div class="sec-title" data-i18n="set.phone">Điện thoại</div>
+          <label class="check"><input type="checkbox" id="immersiveIn" name="immersive"> <span data-i18n="set.immersive">Chơi toàn màn hình, xoay ngang</span></label>
+          <p class="hint" data-i18n="set.immersiveHint">Khi bấm Bắt đầu, màn chơi phủ kín màn hình theo chiều ngang và chạm vào bất kỳ đâu cũng tính là một lần gõ. Nếu máy không tự xoay, hãy xoay ngang điện thoại.</p>
         </div>
 
         <fieldset id="fsLatency">
-          <div class="sec-title">Độ trễ</div>
+          <div class="sec-title" data-i18n="set.latencySec">Độ trễ</div>
           <div class="field">
-            <div class="field-head"><label for="latencyIn">Bù trễ</label><span class="val" id="latVal">±0 ms</span></div>
+            <div class="field-head"><label for="latencyIn" data-i18n="set.latency">Bù trễ</label><span class="val" id="latVal">±0 ms</span></div>
             <input type="range" id="latencyIn" name="latency" min="-150" max="350" step="1">
-            <p class="hint">Nếu bạn gõ trùng tiếng click mà vẫn bị báo muộn (hay gặp với tai nghe Bluetooth), hãy đo độ trễ một lần. Trên iPhone, tắt chế độ im lặng để nghe tiếng click.</p>
+            <p class="hint" data-i18n="set.latencyHint">Nếu bạn gõ trùng tiếng click mà vẫn bị báo muộn (hay gặp với tai nghe Bluetooth), hãy đo độ trễ một lần. Trên iPhone, tắt chế độ im lặng để nghe tiếng click.</p>
           </div>
-          <button type="button" class="btn-secondary" id="calibBtn">Đo độ trễ</button>
+          <button type="button" class="btn-secondary" id="calibBtn" data-i18n="set.calibBtn">Đo độ trễ</button>
           <p class="hint" id="calibMsg" hidden></p>
         </fieldset>
       </form>
@@ -817,15 +840,15 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
 
     <section class="log" aria-labelledby="logTitle">
       <div class="log-head">
-        <h2 id="logTitle">Nhật ký luyện tập</h2>
+        <h2 id="logTitle" data-i18n="log.title">Nhật ký luyện tập</h2>
         <button type="button" class="btn-ghost" id="clearLog" hidden>Xoá nhật ký</button>
       </div>
       <p class="log-note" id="logNote">Kết quả mỗi bài được lưu trên trình duyệt này để bạn theo dõi tiến bộ.</p>
-      <p class="log-empty" id="logEmpty">Chưa có lượt nào. Hoàn thành một bài để thấy điểm, độ chính xác và độ lệch trung bình ở đây.</p>
+      <p class="log-empty" id="logEmpty" data-i18n="log.empty">Chưa có lượt nào. Hoàn thành một bài để thấy điểm, độ chính xác và độ lệch trung bình ở đây.</p>
       <div class="table-wrap">
         <table id="logTable" hidden>
           <thead>
-            <tr><th>Thời điểm</th><th>Nguồn</th><th class="num">Tempo</th><th>Nhịp</th><th>Gõ theo</th><th class="num">Ô nhịp</th><th>Độ khó</th><th class="num">Chính xác</th><th>Hạng</th><th class="num">Lệch TB</th></tr>
+            <tr><th data-i18n="log.when">Thời điểm</th><th data-i18n="log.source">Nguồn</th><th class="num">Tempo</th><th data-i18n="log.meter">Nhịp</th><th data-i18n="log.sub">Gõ theo</th><th class="num" data-i18n="log.bars">Ô nhịp</th><th data-i18n="log.diff">Độ khó</th><th class="num" data-i18n="log.acc">Chính xác</th><th data-i18n="log.grade">Hạng</th><th class="num" data-i18n="log.mean">Lệch TB</th></tr>
           </thead>
           <tbody id="logBody"></tbody>
         </table>
@@ -1175,19 +1198,17 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
   const LS_HIST = 'nhipchuan:v1:history';
   const DEFAULTS = {
     bpm: 90, beats: 4, sub: 1, accent: true, length: 16, target: 85, diff: 'normal', gap: 'off', ramp: 'off',
-    sound: 'wood', subClick: true, volume: 80, latency: 0, source: 'metro', songClick: true, songVol: 80, immersive: true,
+    sound: 'wood', subClick: true, volume: 80, latency: 0, source: 'metro', songClick: true, songVol: 80, immersive: true, lang: 'vi',
   };
   const DIFF = {
-    easy: { perfect: 0.040, good: 0.080, ok: 0.130, name: 'Dễ' },
-    normal: { perfect: 0.025, good: 0.050, ok: 0.090, name: 'Vừa' },
-    hard: { perfect: 0.015, good: 0.030, ok: 0.060, name: 'Khó' },
+    easy: { perfect: 0.040, good: 0.080, ok: 0.130 },
+    normal: { perfect: 0.025, good: 0.050, ok: 0.090 },
+    hard: { perfect: 0.015, good: 0.030, ok: 0.060 },
   };
   const GAPS = { off: null, '3-1': [3, 1], '2-2': [2, 2], '1-1': [1, 1], '4-4': [4, 4], '1-3': [1, 3] };
   const RAMPS = { off: null, '2-4': [2, 4], '5-4': [5, 4], '5-8': [5, 8], '10-8': [10, 8] };
   const POINTS = { perfect: 1, good: 0.8, ok: 0.5, miss: 0, extra: 0 };
   const SCORE = { perfect: 300, good: 200, ok: 100, miss: 0, extra: 0 };
-  const LABEL = { perfect: 'Hoàn hảo', good: 'Tốt', ok: 'Khá', miss: 'Trượt', extra: 'Gõ thừa' };
-  const SUB_NAME = { 1: 'nốt đen', 2: 'móc đơn', 3: 'liên ba', 4: 'móc kép' };
   const TEMPO_NAMES = [[40, 'Grave'], [60, 'Largo'], [66, 'Larghetto'], [76, 'Adagio'], [108, 'Andante'], [120, 'Moderato'], [168, 'Allegro'], [200, 'Presto'], [Infinity, 'Prestissimo']];
   const LOOKAHEAD = 0.15, TICK_MS = 25, PREVIEW_LEAD = 0.55, PREROLL = 1.0, SONG_MAX_SEC = 1200;
   const FONT_DISPLAY = '"Chakra Petch", "Be Vietnam Pro", system-ui, sans-serif';
@@ -1195,19 +1216,457 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
   const FONT_DATA = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace';
   const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
+  /* =============================== Language ===============================
+     Vietnamese is the reference text; English mirrors every key. An entry is a string with
+     {placeholders} or, where English needs plurals, a function of the parameters. */
+  const plural = (n, one, many) => (Number(n) === 1 ? one : many);
+  const I18N = {
+    vi: {
+      'tagline': 'Luyện giữ nhịp cùng metronome hoặc theo chính bài hát của bạn. Gõ phím <kbd>Space</kbd> đúng lúc nốt chạm vạch đích.',
+      'keys.aria': 'Phím tắt',
+      'keys.space': '<kbd>Space</kbd> gõ nhịp, bắt đầu',
+      'keys.esc': '<kbd>Esc</kbd> dừng',
+      'keys.arrows': '<kbd>↑</kbd><kbd>↓</kbd> đổi tempo',
+      'stage.aria': 'Màn luyện nhịp',
+      'bpm.up': 'Tăng 1 BPM',
+      'bpm.down': 'Giảm 1 BPM',
+      'sb.score': 'Điểm',
+      'sb.combo': 'Combo',
+      'sb.acc': 'Chính xác',
+      'lane.aria': 'Khuông nhạc một dòng: nốt chạy từ phải sang trái, gõ khi nốt chạm vạch đích',
+      'lane.hint': '<kbd>Space</kbd> hoặc chạm Gõ để bắt đầu',
+      'lane.silent': 'click tắt · giữ nhịp',
+      'lane.target': 'ĐÍCH',
+      'calib.title': 'Đo độ trễ',
+      'calib.body': 'Nghe 4 tiếng đếm vào, rồi gõ Space (hoặc chạm Gõ) trùng với từng tiếng click. Nên nhắm mắt và chỉ nghe.',
+      'calib.stat': '/ 24 lần gõ · trung vị',
+      'countin': 'Đếm vào',
+      'meter.title': 'Độ lệch so với phách',
+      'meter.last': 'Lần cuối',
+      'meter.avg': 'TB 12 nốt',
+      'meter.early': 'Sớm',
+      'meter.late': 'Muộn',
+      'meter.aria': 'Thanh độ lệch: giữa là đúng phách, bên trái là gõ sớm, bên phải là gõ muộn',
+      'prog.title': 'Tiến trình',
+      'acc.title': 'Độ chính xác',
+      'acc.label': '{acc} · mục tiêu {target}%',
+      'acc.target': 'Mục tiêu',
+      'tap': 'Gõ',
+      'tap.aria': 'Gõ nhịp, tương đương phím Space',
+      'start': 'Bắt đầu',
+      'stop.esc': 'Dừng <kbd>Esc</kbd>',
+      'imm.stop': '✕ Dừng',
+      'imm.stopAria': 'Dừng bài tập',
+      'res.accOf': 'độ chính xác · mục tiêu',
+      'res.again': 'Chơi lại <kbd>Space</kbd>',
+      'res.close': 'Đóng',
+      'res.chartTitle': 'Độ lệch từng nốt (ms)',
+      'res.chartAria': 'Biểu đồ độ lệch từng nốt theo thời gian. Dùng phím mũi tên trái phải để xem từng nốt.',
+      'res.byBar': 'Từng ô nhịp',
+      'res.tableToggle': 'Xem dạng bảng theo ô nhịp',
+      'res.stopped': 'Đã dừng giữa chừng',
+      'res.pass': 'Đạt mục tiêu',
+      'res.fail': 'Chưa đạt mục tiêu',
+      'res.maxCombo': 'Combo dài nhất',
+      'res.mean': 'Lệch trung bình',
+      'res.sd': 'Độ dao động',
+      'res.trend': 'Xu hướng (TB 9 nốt)',
+      'res.silentBars': 'Ô im',
+      'res.barsPass': '{a}/{b} ô đạt mục tiêu',
+      'res.try': 'Thử {bpm} BPM',
+      'res.announce': '{verdict}. Độ chính xác {acc}, hạng {grade}.',
+      'meta.about': 'khoảng {bpm} BPM',
+      'meta.barsOf': '{a}/{b} ô',
+      'meta.bars': '{n} ô',
+      'meta.diff': 'độ khó {d}',
+      'meta.gap': 'click {a} ô có, {b} ô im',
+      'tip.early.song': 'Bạn có xu hướng gõ sớm khoảng {ms} ms. Thả lỏng tay, chờ beat của bài rồi gõ trùng với nó.',
+      'tip.early.metro': 'Bạn có xu hướng gõ sớm khoảng {ms} ms. Thả lỏng tay, chờ tiếng click rồi gõ trùng với nó.',
+      'tip.late.song': 'Bạn có xu hướng gõ muộn khoảng {ms} ms. Đếm thầm trước mỗi phách để gõ chủ động thay vì phản xạ theo nhạc.',
+      'tip.late.metro': 'Bạn có xu hướng gõ muộn khoảng {ms} ms. Đếm thầm trước mỗi phách để gõ chủ động thay vì phản xạ theo tiếng click.',
+      'tip.rush': 'Nửa sau bài bạn gõ sớm hơn nửa đầu {ms} ms, dấu hiệu bị nhanh dần (rushing).',
+      'tip.drag': 'Nửa sau bài bạn gõ muộn hơn nửa đầu {ms} ms, dấu hiệu bị chậm dần (dragging).',
+      'tip.silent': 'Ở các ô im, độ chính xác còn {s} so với {l} khi có click. Đếm thầm "1 2 3 4" trong các ô im.',
+      'tip.spread.song': 'Độ dao động ±{sd} ms còn lớn. Bật “Kèm click theo beat” làm điểm tựa để luyện độ đều trước.',
+      'tip.spread.metro': 'Độ dao động ±{sd} ms còn lớn. Hạ tempo khoảng 10% để luyện độ đều trước.',
+      'tip.extra': 'Có {n} lần gõ thừa. Mỗi nốt chỉ gõ một lần.',
+      'tip.good.song': 'Nhịp rất chắc. Thử tắt click theo beat, hoặc chuyển sang gõ móc đơn.',
+      'tip.good.metro': 'Nhịp rất chắc. Thử tăng tempo hoặc bật click ngắt quãng để nâng độ khó.',
+      'tip.retry': 'Thử lại và tập trung gõ trùng beat, đừng nhìn nốt mà hãy nghe.',
+      'chart.late': 'MUỘN',
+      'chart.early': 'SỚM',
+      'chart.noTap': 'không gõ',
+      'ctip.noTap': 'Không gõ',
+      'ctip.where': 'Ô {bar} · phách {beat}',
+      'ctip.silent': ' · ô im',
+      'tbl.bar': 'Ô', 'tbl.tempo': 'Tempo', 'tbl.click': 'Click', 'tbl.acc': 'Chính xác', 'tbl.mean': 'Lệch TB', 'tbl.miss': 'Trượt', 'tbl.on': 'có', 'tbl.off': 'im',
+      'j.perfect': 'Hoàn hảo', 'j.good': 'Tốt', 'j.ok': 'Khá', 'j.miss': 'Trượt', 'j.extra': 'Gõ thừa',
+      'pop.early': 'QUÁ SỚM', 'pop.late': 'QUÁ MUỘN',
+      'off.early': 'sớm', 'off.late': 'muộn',
+      'bar.n': 'Ô {n}',
+      'bar.clickOff': ' (click tắt)',
+      'bar.silent': ' (ô im)',
+      'prog.song': '{n} ô · {dur} · từ {start}',
+      'prog.len': '{n} ô · {dur}',
+      'prog.inf': 'Không giới hạn · {dur} mỗi 16 ô',
+      'prog.calib': 'Đang đo độ trễ…',
+      'prog.countin': 'Đếm vào…',
+      'prog.barOf': 'Ô {cb}/{total} · {el} / {tot}',
+      'prog.bar': 'Ô {cb} · {el}',
+      'song.title': 'Phân tích beat',
+      'song.intro': 'Tải một bài hát lên để tìm tempo và vị trí từng beat, nghe thử kèm tiếng click, rồi luyện gõ theo chính bài đó. File được xử lý ngay trong trình duyệt của bạn, không gửi đi đâu.',
+      'song.choose': 'Chọn file nhạc',
+      'song.dropSub': 'hoặc kéo thả vào đây · MP3, WAV, M4A, OGG, FLAC',
+      'song.name': 'Bài',
+      'song.dur': 'Thời lượng',
+      'song.beats': 'Số beat',
+      'song.conf': 'Độ rõ nhịp',
+      'song.stab': 'Độ đều',
+      'song.alts': 'Nghe thấy nhanh hoặc chậm gấp đôi? Chọn tempo khác:',
+      'song.wave': 'Sóng âm và beat',
+      'song.waveAria': 'Sóng âm của bài. Bấm để chọn chỗ bắt đầu luyện, hoặc dùng phím mũi tên trái phải để dời từng ô nhịp.',
+      'song.detailAria': 'Phóng to quanh vị trí đang nghe: đường độ mạnh âm bật lên và vạch beat',
+      'song.waveHint': 'Bấm vào sóng âm để chọn chỗ bắt đầu luyện. Vạch nhỏ trên cùng là phách 1 của mỗi ô, vùng tô màu là đoạn sẽ được chấm. Khung dưới phóng to quanh chỗ đang nghe: vạch beat nên trùng các đỉnh âm.',
+      'song.click': 'Kèm click theo beat',
+      'song.vol': 'Âm lượng bài',
+      'song.db': 'Phách 1',
+      'song.dbPrev': 'Dời phách 1 sớm hơn một phách',
+      'song.dbNext': 'Dời phách 1 muộn hơn một phách',
+      'song.tempoTitle': 'Tempo theo thời gian',
+      'song.tempoAria': 'Biểu đồ tempo từng beat theo thời gian',
+      'song.practice': 'Gõ theo bài này',
+      'song.useBpm': 'Dùng {bpm} BPM cho metronome',
+      'song.listen': 'Nghe thử',
+      'song.stopListen': 'Dừng nghe',
+      'song.altTitle': 'Dò lại beat theo tempo này',
+      'song.tempoNote': 'trung bình {avg} BPM · từ {lo} đến {hi}',
+      'song.start': 'Bắt đầu từ ô {bar} ({time}) · {n} ô được chấm',
+      'song.startLate': 'Chỗ bắt đầu quá gần cuối bài',
+      'song.default': 'Bài hát',
+      'song.beatTip': 'beat {n} · {time}',
+      'conf.4': 'Rất rõ', 'conf.3': 'Rõ', 'conf.2': 'Trung bình', 'conf.1': 'Yếu, nên kiểm tra bằng tai',
+      'st.tooBig': 'File lớn quá 300 MB. Hãy chọn file nhỏ hơn.',
+      'st.reading': 'Đang đọc “{name}”…',
+      'st.decoding': 'Đang giải mã âm thanh…',
+      'st.tooShort': 'Bài quá ngắn để phân tích, cần ít nhất 6 giây.',
+      'st.analyzing': 'Đang phân tích beat… {p}%',
+      'st.noBeat': 'Không tìm thấy nhịp rõ ràng trong file này. Hãy thử một bài có trống hoặc nhịp đều hơn.',
+      'st.cantRead': 'Không đọc được file này. Hãy thử MP3, WAV hoặc M4A.',
+      'set.title': 'Thiết lập',
+      'set.source': 'Nguồn nhịp',
+      'src.metro': 'Metronome',
+      'src.song': 'Bài hát',
+      'src.none': 'Tải một bài ở mục Phân tích beat để gõ theo nhạc.',
+      'src.using': 'Đang gõ theo “{name}”, khoảng {bpm} BPM. Tempo, click ngắt quãng và tăng tốc không dùng cho bài hát.',
+      'src.have': 'Đã có bài “{name}”. Chọn Bài hát để gõ theo nhạc.',
+      'set.tempoSec': 'Nhịp độ',
+      'set.meterSec': 'Nhịp và chia phách',
+      'set.beats': 'Số phách mỗi ô',
+      'set.sub': 'Gõ theo',
+      'sub.1': 'nốt đen', 'sub.2': 'móc đơn', 'sub.3': 'liên ba', 'sub.4': 'móc kép',
+      'sub.1t': 'Nốt đen: 1 lần mỗi phách', 'sub.2t': 'Móc đơn: 2 lần mỗi phách', 'sub.3t': 'Liên ba: 3 lần mỗi phách', 'sub.4t': 'Móc kép: 4 lần mỗi phách',
+      'subs.1': 'nốt đen', 'subs.2': 'móc đơn', 'subs.3': 'liên ba', 'subs.4': 'móc kép',
+      'set.accent': 'Nhấn mạnh phách đầu ô nhịp',
+      'set.exercise': 'Bài tập',
+      'set.length': 'Độ dài',
+      'len.pill': '{n} ô',
+      'len.inf': 'Không giới hạn (với bài hát: đến hết bài), bấm Dừng để xem kết quả',
+      'len.infAria': 'Không giới hạn',
+      'set.target': 'Mục tiêu độ chính xác',
+      'set.diff': 'Độ khó (cửa sổ chấm)',
+      'diff.easy': 'Dễ', 'diff.normal': 'Vừa', 'diff.hard': 'Khó',
+      'diff.note': 'Ở tempo này: Hoàn hảo ±{p} ms · Tốt ±{g} ms · Khá ±{o} ms quanh nốt. Nốt càng dày thì cửa sổ càng hẹp.',
+      'set.gap': 'Click ngắt quãng',
+      'gap.off': 'Tắt, click kêu mọi ô',
+      'gap.opt': '{a} ô có click, {b} ô im',
+      'gap.hint': 'Ô im không có tiếng click và nốt bị ẩn. Bạn vẫn gõ đều để luyện nhịp trong đầu.',
+      'set.ramp': 'Tăng tốc dần',
+      'ramp.off': 'Tắt',
+      'ramp.opt': '+{a} BPM sau mỗi {b} ô',
+      'set.sound': 'Âm thanh',
+      'set.clickSound': 'Tiếng click',
+      'sound.wood': 'Mõ gỗ', 'sound.click': 'Click', 'sound.beep': 'Bíp',
+      'set.subClick': 'Kêu cả các nốt chia phách',
+      'set.volume': 'Âm lượng click',
+      'set.phone': 'Điện thoại',
+      'set.immersive': 'Chơi toàn màn hình, xoay ngang',
+      'set.immersiveHint': 'Khi bấm Bắt đầu, màn chơi phủ kín màn hình theo chiều ngang và chạm vào bất kỳ đâu cũng tính là một lần gõ. Nếu máy không tự xoay, hãy xoay ngang điện thoại.',
+      'set.latencySec': 'Độ trễ',
+      'set.latency': 'Bù trễ',
+      'set.latencyHint': 'Nếu bạn gõ trùng tiếng click mà vẫn bị báo muộn (hay gặp với tai nghe Bluetooth), hãy đo độ trễ một lần. Trên iPhone, tắt chế độ im lặng để nghe tiếng click.',
+      'set.calibBtn': 'Đo độ trễ',
+      'calib.few': 'Chưa đủ dữ liệu: cần ít nhất 8 lần gõ trùng tiếng click. Hãy đo lại.',
+      'calib.result': 'Độ trễ đo được: {val}. Đã áp dụng vào Bù trễ.',
+      'calib.resultShaky': 'Độ trễ đo được: {val}, dao động ±{mad} ms nên đo lại một lần nữa. Đã áp dụng vào Bù trễ.',
+      'log.title': 'Nhật ký luyện tập',
+      'log.clear': 'Xoá nhật ký',
+      'log.confirm': 'Bấm lần nữa để xoá',
+      'log.note0': 'Kết quả mỗi bài được lưu trên trình duyệt này để bạn theo dõi tiến bộ.',
+      'log.note': '{n} lượt đã lưu trên trình duyệt này. Cao nhất: {acc} ở {bpm} BPM, {what}.',
+      'log.empty': 'Chưa có lượt nào. Hoàn thành một bài để thấy điểm, độ chính xác và độ lệch trung bình ở đây.',
+      'log.when': 'Thời điểm', 'log.source': 'Nguồn', 'log.meter': 'Nhịp', 'log.sub': 'Gõ theo', 'log.bars': 'Ô nhịp', 'log.diff': 'Độ khó', 'log.acc': 'Chính xác', 'log.grade': 'Hạng', 'log.mean': 'Lệch TB',
+      'log.stopped': 'dừng sớm', 'log.pass': 'đạt', 'log.fail': 'chưa đạt',
+      'toast.audioLost': 'Âm thanh bị gián đoạn nên bài tập đã dừng.',
+      'toast.noAudio': 'Trình duyệt này không phát được âm thanh (thiếu Web Audio).',
+      'toast.audioFail': 'Chưa bật được âm thanh. Hãy bấm nút Bắt đầu lần nữa.',
+      'toast.songShort': 'Đoạn còn lại của bài quá ngắn. Hãy chọn chỗ bắt đầu sớm hơn.',
+      'toast.stoppedFew': 'Đã dừng. Chưa đủ nốt để chấm điểm.',
+      'toast.finished': 'Bài tập đã kết thúc.',
+      'toast.calibFail': 'Đo độ trễ chưa xong.',
+      'toast.calibSet': 'Đã đặt bù trễ {val}.',
+      'toast.busyLoad': 'Hãy dừng bài đang chơi trước khi tải file mới.',
+      'toast.analyzed': 'Đã phân tích xong: khoảng {bpm} BPM. Nhấn Space để gõ theo bài.',
+      'toast.noTrack': 'Không dò được beat ở tempo này.',
+      'toast.metroSet': 'Metronome đã đặt {bpm} BPM.',
+      'toast.logCleared': 'Đã xoá nhật ký luyện tập.',
+      'toast.hidden': 'Bài tập đã dừng vì trang bị ẩn.',
+      'ann.calib': 'Bắt đầu đo độ trễ. Nghe và gõ theo tiếng click.',
+      'ann.song': 'Bắt đầu gõ theo bài hát. Đếm vào một ô nhịp.',
+      'ann.start': 'Bắt đầu. Đếm vào một ô nhịp.',
+      'ann.analyzed': 'Phân tích xong. Tempo khoảng {bpm} BPM, {n} beat.',
+    },
+    en: {
+      'tagline': 'Practice keeping time with a metronome or along with your own songs. Press <kbd>Space</kbd> just as each note reaches the target line.',
+      'keys.aria': 'Keyboard shortcuts',
+      'keys.space': '<kbd>Space</kbd> tap, start',
+      'keys.esc': '<kbd>Esc</kbd> stop',
+      'keys.arrows': '<kbd>↑</kbd><kbd>↓</kbd> change tempo',
+      'stage.aria': 'Practice stage',
+      'bpm.up': 'Increase by 1 BPM',
+      'bpm.down': 'Decrease by 1 BPM',
+      'sb.score': 'Score',
+      'sb.combo': 'Combo',
+      'sb.acc': 'Accuracy',
+      'lane.aria': 'One-line staff: notes move from right to left; tap when a note reaches the target line',
+      'lane.hint': '<kbd>Space</kbd> or the Tap button to start',
+      'lane.silent': 'click off · keep time',
+      'lane.target': 'TARGET',
+      'calib.title': 'Latency test',
+      'calib.body': 'Listen to the 4 count-in clicks, then tap Space (or the Tap button) together with each click. Close your eyes and just listen.',
+      'calib.stat': '/ 24 taps · median',
+      'countin': 'Count-in',
+      'meter.title': 'Offset from the beat',
+      'meter.last': 'Last',
+      'meter.avg': 'Avg of 12',
+      'meter.early': 'Early',
+      'meter.late': 'Late',
+      'meter.aria': 'Timing meter: the center is on the beat, left is early, right is late',
+      'prog.title': 'Progress',
+      'acc.title': 'Accuracy',
+      'acc.label': '{acc} · target {target}%',
+      'acc.target': 'Target',
+      'tap': 'Tap',
+      'tap.aria': 'Tap the beat (same as the Space key)',
+      'start': 'Start',
+      'stop.esc': 'Stop <kbd>Esc</kbd>',
+      'imm.stop': '✕ Stop',
+      'imm.stopAria': 'Stop the exercise',
+      'res.accOf': 'accuracy · target',
+      'res.again': 'Play again <kbd>Space</kbd>',
+      'res.close': 'Close',
+      'res.chartTitle': 'Offset per note (ms)',
+      'res.chartAria': "Chart of each note's offset over time. Use the left and right arrow keys to step through the notes.",
+      'res.byBar': 'Bar by bar',
+      'res.tableToggle': 'Show as a table by bar',
+      'res.stopped': 'Stopped early',
+      'res.pass': 'Target reached',
+      'res.fail': 'Below target',
+      'res.maxCombo': 'Longest combo',
+      'res.mean': 'Average offset',
+      'res.sd': 'Spread',
+      'res.trend': 'Trend (9-note average)',
+      'res.silentBars': 'Silent bars',
+      'res.barsPass': '{a}/{b} bars on target',
+      'res.try': 'Try {bpm} BPM',
+      'res.announce': '{verdict}. Accuracy {acc}, grade {grade}.',
+      'meta.about': 'about {bpm} BPM',
+      'meta.barsOf': '{a}/{b} bars',
+      'meta.bars': (p) => `${p.n} ${plural(p.n, 'bar', 'bars')}`,
+      'meta.diff': '{d} difficulty',
+      'meta.gap': 'click {a} on, {b} off',
+      'tip.early.song': "You tend to tap about {ms} ms early. Relax your hand, wait for the song's beat and tap right with it.",
+      'tip.early.metro': 'You tend to tap about {ms} ms early. Relax your hand, wait for the click and tap right with it.',
+      'tip.late.song': 'You tend to tap about {ms} ms late. Count silently ahead of each beat so you tap on purpose instead of reacting to the music.',
+      'tip.late.metro': 'You tend to tap about {ms} ms late. Count silently ahead of each beat so you tap on purpose instead of reacting to the click.',
+      'tip.rush': 'In the second half you tapped {ms} ms earlier than in the first half, a sign of rushing.',
+      'tip.drag': 'In the second half you tapped {ms} ms later than in the first half, a sign of dragging.',
+      'tip.silent': 'In the silent bars your accuracy fell to {s}, compared with {l} with the click. Count “1 2 3 4” silently through the silent bars.',
+      'tip.spread.song': 'Your spread of ±{sd} ms is still wide. Turn on “Click on each beat” as an anchor and work on evenness first.',
+      'tip.spread.metro': 'Your spread of ±{sd} ms is still wide. Lower the tempo by about 10% and work on evenness first.',
+      'tip.extra': (p) => `There ${plural(p.n, 'was 1 extra tap', `were ${p.n} extra taps`)}. Tap each note only once.`,
+      'tip.good.song': 'Very steady. Try turning off the beat click, or switch to tapping eighth notes.',
+      'tip.good.metro': 'Very steady. Try a faster tempo or turn on gap clicks to make it harder.',
+      'tip.retry': "Try again and focus on tapping with the beat: listen, don't watch the notes.",
+      'chart.late': 'LATE',
+      'chart.early': 'EARLY',
+      'chart.noTap': 'no tap',
+      'ctip.noTap': 'No tap',
+      'ctip.where': 'Bar {bar} · beat {beat}',
+      'ctip.silent': ' · silent bar',
+      'tbl.bar': 'Bar', 'tbl.tempo': 'Tempo', 'tbl.click': 'Click', 'tbl.acc': 'Accuracy', 'tbl.mean': 'Avg offset', 'tbl.miss': 'Misses', 'tbl.on': 'on', 'tbl.off': 'off',
+      'j.perfect': 'Perfect', 'j.good': 'Good', 'j.ok': 'OK', 'j.miss': 'Miss', 'j.extra': 'Extra tap',
+      'pop.early': 'TOO EARLY', 'pop.late': 'TOO LATE',
+      'off.early': 'early', 'off.late': 'late',
+      'bar.n': 'Bar {n}',
+      'bar.clickOff': ' (click off)',
+      'bar.silent': ' (silent)',
+      'prog.song': (p) => `${p.n} ${plural(p.n, 'bar', 'bars')} · ${p.dur} · from ${p.start}`,
+      'prog.len': (p) => `${p.n} ${plural(p.n, 'bar', 'bars')} · ${p.dur}`,
+      'prog.inf': 'No limit · {dur} per 16 bars',
+      'prog.calib': 'Testing latency…',
+      'prog.countin': 'Count-in…',
+      'prog.barOf': 'Bar {cb}/{total} · {el} / {tot}',
+      'prog.bar': 'Bar {cb} · {el}',
+      'song.title': 'Beat analysis',
+      'song.intro': 'Upload a song to find its tempo and the position of every beat, listen to it with a click on top, then practice tapping along to that very song. The file is processed right in your browser and never sent anywhere.',
+      'song.choose': 'Choose an audio file',
+      'song.dropSub': 'or drag and drop it here · MP3, WAV, M4A, OGG, FLAC',
+      'song.name': 'Song',
+      'song.dur': 'Length',
+      'song.beats': 'Beats',
+      'song.conf': 'Beat clarity',
+      'song.stab': 'Steadiness',
+      'song.alts': 'Sounds twice as fast or slow? Pick another tempo:',
+      'song.wave': 'Waveform and beats',
+      'song.waveAria': 'Waveform of the song. Click to choose where practice starts, or use the left and right arrow keys to move one bar at a time.',
+      'song.detailAria': 'Zoomed view around the playhead: onset strength curve and beat lines',
+      'song.waveHint': 'Click the waveform to choose where practice starts. The small ticks along the top mark beat 1 of each bar, and the shaded area is the part that will be scored. The lower panel zooms in around the playhead: the beat lines should line up with the peaks.',
+      'song.click': 'Click on each beat',
+      'song.vol': 'Song volume',
+      'song.db': 'Beat 1',
+      'song.dbPrev': 'Move beat 1 one beat earlier',
+      'song.dbNext': 'Move beat 1 one beat later',
+      'song.tempoTitle': 'Tempo over time',
+      'song.tempoAria': 'Chart of the tempo at each beat over time',
+      'song.practice': 'Tap along to this song',
+      'song.useBpm': 'Use {bpm} BPM for the metronome',
+      'song.listen': 'Listen',
+      'song.stopListen': 'Stop listening',
+      'song.altTitle': 'Re-detect the beats at this tempo',
+      'song.tempoNote': 'average {avg} BPM · from {lo} to {hi}',
+      'song.start': (p) => `Starts at bar ${p.bar} (${p.time}) · ${p.n} ${plural(p.n, 'bar', 'bars')} scored`,
+      'song.startLate': 'The start point is too close to the end of the song',
+      'song.default': 'Song',
+      'song.beatTip': 'beat {n} · {time}',
+      'conf.4': 'Very clear', 'conf.3': 'Clear', 'conf.2': 'Moderate', 'conf.1': 'Weak, check by ear',
+      'st.tooBig': 'The file is larger than 300 MB. Please choose a smaller one.',
+      'st.reading': 'Reading “{name}”…',
+      'st.decoding': 'Decoding audio…',
+      'st.tooShort': 'The track is too short to analyze; it needs at least 6 seconds.',
+      'st.analyzing': 'Analyzing beats… {p}%',
+      'st.noBeat': 'No clear beat found in this file. Try a song with drums or a steadier rhythm.',
+      'st.cantRead': "Couldn't read this file. Try MP3, WAV or M4A.",
+      'set.title': 'Settings',
+      'set.source': 'Beat source',
+      'src.metro': 'Metronome',
+      'src.song': 'Song',
+      'src.none': 'Load a song under Beat analysis to tap along to music.',
+      'src.using': "Tapping along to “{name}”, about {bpm} BPM. Tempo, gap clicks and speed-up don't apply to songs.",
+      'src.have': '“{name}” is loaded. Choose Song to tap along to it.',
+      'set.tempoSec': 'Speed',
+      'set.meterSec': 'Meter and subdivision',
+      'set.beats': 'Beats per bar',
+      'set.sub': 'Tap on',
+      'sub.1': 'quarter notes', 'sub.2': 'eighth notes', 'sub.3': 'triplets', 'sub.4': 'sixteenth notes',
+      'sub.1t': 'Quarter notes: 1 tap per beat', 'sub.2t': 'Eighth notes: 2 taps per beat', 'sub.3t': 'Triplets: 3 taps per beat', 'sub.4t': 'Sixteenth notes: 4 taps per beat',
+      'subs.1': 'quarters', 'subs.2': 'eighths', 'subs.3': 'triplets', 'subs.4': '16ths',
+      'set.accent': 'Accent the first beat of each bar',
+      'set.exercise': 'Exercise',
+      'set.length': 'Length (bars)',
+      'len.pill': '{n}',
+      'len.inf': 'No limit (for songs: until the end). Press Stop to see your results',
+      'len.infAria': 'No limit',
+      'set.target': 'Accuracy target',
+      'set.diff': 'Difficulty (timing window)',
+      'diff.easy': 'Easy', 'diff.normal': 'Normal', 'diff.hard': 'Hard',
+      'diff.note': 'At this tempo: Perfect ±{p} ms · Good ±{g} ms · OK ±{o} ms around each note. The denser the notes, the narrower the window.',
+      'set.gap': 'Gap clicks',
+      'gap.off': 'Off, click in every bar',
+      'gap.opt': (p) => `${p.a} ${plural(p.a, 'bar', 'bars')} with click, ${p.b} silent`,
+      'gap.hint': 'Silent bars have no click and their notes are hidden. Keep tapping evenly to train your inner pulse.',
+      'set.ramp': 'Gradual speed-up',
+      'ramp.off': 'Off',
+      'ramp.opt': '+{a} BPM every {b} bars',
+      'set.sound': 'Sound',
+      'set.clickSound': 'Click sound',
+      'sound.wood': 'Woodblock', 'sound.click': 'Click', 'sound.beep': 'Beep',
+      'set.subClick': 'Also click the subdivisions',
+      'set.volume': 'Click volume',
+      'set.phone': 'Phone',
+      'set.immersive': 'Full screen in landscape',
+      'set.immersiveHint': "When you press Start, the practice stage fills the screen in landscape and a touch anywhere counts as a tap. If the screen doesn't rotate on its own, turn your phone sideways.",
+      'set.latencySec': 'Latency',
+      'set.latency': 'Latency offset',
+      'set.latencyHint': 'If you tap right with the click but still get marked late (common with Bluetooth headphones), run the latency test once. On iPhone, turn off silent mode to hear the click.',
+      'set.calibBtn': 'Test latency',
+      'calib.few': 'Not enough data: at least 8 taps on the click are needed. Please test again.',
+      'calib.result': 'Measured latency: {val}. Applied to Latency offset.',
+      'calib.resultShaky': 'Measured latency: {val}, varying by ±{mad} ms, so test once more. Applied to Latency offset.',
+      'log.title': 'Practice log',
+      'log.clear': 'Clear log',
+      'log.confirm': 'Click again to clear',
+      'log.note0': 'Your results are saved in this browser so you can track your progress.',
+      'log.note': (p) => `${p.n} ${plural(p.n, 'session', 'sessions')} saved in this browser. Best: ${p.acc} at ${p.bpm} BPM, ${p.what}.`,
+      'log.empty': 'No sessions yet. Finish an exercise to see your score, accuracy and average offset here.',
+      'log.when': 'When', 'log.source': 'Source', 'log.meter': 'Meter', 'log.sub': 'Notes', 'log.bars': 'Bars', 'log.diff': 'Difficulty', 'log.acc': 'Accuracy', 'log.grade': 'Grade', 'log.mean': 'Avg offset',
+      'log.stopped': 'stopped', 'log.pass': 'passed', 'log.fail': 'not yet',
+      'toast.audioLost': 'Audio was interrupted, so the exercise stopped.',
+      'toast.noAudio': "This browser can't play audio (no Web Audio).",
+      'toast.audioFail': "Couldn't turn on audio. Press Start again.",
+      'toast.songShort': 'Too little of the song is left. Choose an earlier start point.',
+      'toast.stoppedFew': 'Stopped. Not enough notes to score.',
+      'toast.finished': 'Exercise finished.',
+      'toast.calibFail': 'The latency test did not finish.',
+      'toast.calibSet': 'Latency offset set to {val}.',
+      'toast.busyLoad': 'Stop the current exercise before loading a new file.',
+      'toast.analyzed': 'Analysis done: about {bpm} BPM. Press Space to tap along.',
+      'toast.noTrack': "Couldn't track the beats at this tempo.",
+      'toast.metroSet': 'Metronome set to {bpm} BPM.',
+      'toast.logCleared': 'Practice log cleared.',
+      'toast.hidden': 'The exercise stopped because the page was hidden.',
+      'ann.calib': 'Latency test started. Listen and tap with the click.',
+      'ann.song': 'Tapping along to the song. One bar of count-in.',
+      'ann.start': 'Started. One bar of count-in.',
+      'ann.analyzed': (p) => `Analysis done. Tempo about ${p.bpm} BPM, ${p.n} ${plural(p.n, 'beat', 'beats')}.`,
+    },
+  };
+  let LANG = 'vi';
+  function t(key, p) {
+    const d = I18N[LANG] || I18N.vi;
+    const s = Object.prototype.hasOwnProperty.call(d, key) ? d[key] : I18N.vi[key];
+    if (s == null) return key;
+    if (typeof s === 'function') return s(p || {});
+    return p ? s.replace(/\{(\w+)\}/g, (m, k) => (p[k] != null ? String(p[k]) : m)) : s;
+  }
+  const subName = (n) => ([1, 2, 3, 4].includes(+n) ? t('sub.' + n) : '');
+  function browserLang() {
+    const list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+    for (const l of list) { const c = String(l).toLowerCase(); if (c.startsWith('vi')) return 'vi'; if (c.startsWith('en')) return 'en'; }
+    return 'en';
+  }
+
   /* =============================== Helpers =============================== */
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
   const stdev = (a) => { if (a.length < 2) return 0; const m = avg(a); return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1)); };
   const median = (a) => { const b = a.slice().sort((x, y) => x - y); const n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : 0; };
   const tempoName = (b) => TEMPO_NAMES.find(([lim]) => b < lim)[1];
-  const nf1 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
-  const nf0 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+  let nf1 = null, nf0 = null; // number formats follow the language: 47,5% / 1.029 in Vietnamese, 47.5% / 1,029 in English
+  function setNumberFormats() {
+    const loc = LANG === 'vi' ? 'vi-VN' : 'en-US';
+    nf1 = new Intl.NumberFormat(loc, { maximumFractionDigits: 1 });
+    nf0 = new Intl.NumberFormat(loc, { maximumFractionDigits: 0 });
+  }
+  setNumberFormats();
   const fmtPct = (v) => (v == null || !Number.isFinite(v) ? '—' : nf1.format(v) + '%');
   const fmtMs = (ms) => { const r = Math.round(ms); return (r > 0 ? '+' : r < 0 ? '−' : '±') + Math.abs(r) + ' ms'; };
-  const describeOff = (ms) => (Math.abs(ms) < 0.5 ? '0 ms' : `${fmtMs(ms)} ${ms < 0 ? 'sớm' : 'muộn'}`);
+  const describeOff = (ms) => (Math.abs(ms) < 0.5 ? '0 ms' : `${fmtMs(ms)} ${t(ms < 0 ? 'off.early' : 'off.late')}`);
   const fmtTime = (s) => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-  const fmtDate = (ms) => { const d = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+  const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const fmtDate = (ms) => {
+    const d = new Date(ms), p = (n) => String(n).padStart(2, '0'), hm = `${p(d.getHours())}:${p(d.getMinutes())}`;
+    return LANG === 'vi' ? `${p(d.getDate())}/${p(d.getMonth() + 1)} ${hm}` : `${MONTHS_EN[d.getMonth()]} ${d.getDate()}, ${hm}`;
+  };
   const shortName = (name, n) => { const s = String(name || '').replace(/\.[a-z0-9]{2,5}$/i, ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
   function lowerBound(arr, t, key) {
     let lo = 0, hi = arr.length;
@@ -1258,11 +1717,16 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       songClick: s.songClick !== false,
       songVol: clamp(Math.round(num(s.songVol, DEFAULTS.songVol)), 0, 100),
       immersive: s.immersive !== false,
+      lang: has(I18N, s.lang) ? s.lang : DEFAULTS.lang,
     };
   }
 
   /* =============================== State =============================== */
-  let settings = sanitize(store.get(LS_SET, null));
+  const savedSettings = store.get(LS_SET, null);
+  // people who already used the Vietnamese-only version (saved settings or practice log) keep Vietnamese;
+  // a first visit follows the browser language
+  DEFAULTS.lang = savedSettings != null || store.get(LS_HIST, null) != null ? 'vi' : browserLang();
+  let settings = sanitize(savedSettings);
   let S = null;              // live session
   let preview = null;        // idle preview of the exercise
   let phase = 'idle';        // idle | starting | countin | play | calib | results
@@ -1302,7 +1766,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     A.ctx.onstatechange = () => {
       if (A.ctx.state === 'running') return;
-      if (isActive()) { finishSession(true); toast('Âm thanh bị gián đoạn nên bài tập đã dừng.'); }
+      if (isActive()) { finishSession(true); toast(t('toast.audioLost')); }
       if (aud) stopAudition();
     };
     return A.ctx;
@@ -1530,20 +1994,20 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
   async function startSession(mode) {
     if (busyNow()) return;
     let pr;
-    try { pr = ensureAudio(); } catch (e) { toast('Trình duyệt này không phát được âm thanh (thiếu Web Audio).'); return; }
+    try { pr = ensureAudio(); } catch (e) { toast(t('toast.noAudio')); return; }
     stopAudition();
     if (phase === 'results') closeResults();
     phase = 'starting'; setStartBtn(); applyLocks();
     enterImmersive(); // inside the tap/click gesture, so fullscreen and rotation are allowed
     await Promise.race([pr.catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
-    if (!A.ctx || A.ctx.state !== 'running') { phase = 'idle'; setStartBtn(); applyLocks(); exitImmersive(); toast('Chưa bật được âm thanh. Hãy bấm nút Bắt đầu lần nữa.'); return; }
+    if (!A.ctx || A.ctx.state !== 'running') { phase = 'idle'; setStartBtn(); applyLocks(); exitImmersive(); toast(t('toast.audioFail')); return; }
     const songMode = mode === 'play' && effSource() === 'song';
     clockDiff = null; sampleClock();
     let cfg, s;
     if (songMode) {
       cfg = songCfg();
       s = buildSongTimeline(cfg, A.ctx.currentTime + 0.35);
-      if (!s) { phase = 'idle'; setStartBtn(); applyLocks(); exitImmersive(); toast('Đoạn còn lại của bài quá ngắn. Hãy chọn chỗ bắt đầu sớm hơn.'); return; }
+      if (!s) { phase = 'idle'; setStartBtn(); applyLocks(); exitImmersive(); toast(t('toast.songShort')); return; }
     } else {
       cfg = mode === 'calib'
         ? Object.assign({}, settings, { bpm: 100, beats: 4, sub: 1, accent: true, length: 6, gap: 'off', ramp: 'off', subClick: false, diff: 'normal' })
@@ -1584,7 +2048,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     updateCountdownPos();
     hudDirty = laneDirty = meterDirty = true;
     startTimer(); requestWakeLock();
-    announce(mode === 'calib' ? 'Bắt đầu đo độ trễ. Nghe và gõ theo tiếng click.' : songMode ? 'Bắt đầu gõ theo bài hát. Đếm vào một ô nhịp.' : 'Bắt đầu. Đếm vào một ô nhịp.');
+    announce(t(mode === 'calib' ? 'ann.calib' : songMode ? 'ann.song' : 'ann.start'));
   }
 
   function update(vt) {
@@ -1651,18 +2115,18 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     if (r === 'miss') s.combo = 0; else { s.combo++; if (s.combo > s.maxCombo) s.maxCombo = s.combo; }
     s.score += Math.round(SCORE[r] * (1 + Math.min(s.combo, 100) / 100));
     if (tapT != null) s.taps.push({ t: tapT, r });
-    let text = LABEL[r].toUpperCase();
-    if (r === 'miss' && off !== null) text = off < 0 ? 'QUÁ SỚM' : 'QUÁ MUỘN';
+    let text = t('j.' + r).toUpperCase();
+    if (r === 'miss' && off !== null) text = t(off < 0 ? 'pop.early' : 'pop.late');
     s.popup = { text, sub: off !== null ? fmtMs(off * 1000) : '', r, at: e.jt };
     if (off !== null) s.flash = { r, at: e.jt };
     hudDirty = true;
   }
-  function extraTap(s, t) {
+  function extraTap(s, tapT) {
     s.counts.extra++; s.n++; s.combo = 0;
-    const near = nearestScorable(s, t);
+    const near = nearestScorable(s, tapT);
     if (near && s.barStats[near.bar]) s.barStats[near.bar].n++;
-    s.taps.push({ t, r: 'extra' });
-    s.popup = { text: 'GÕ THỪA', sub: '', r: 'extra', at: performance.now() };
+    s.taps.push({ t: tapT, r: 'extra' });
+    s.popup = { text: t('j.extra').toUpperCase(), sub: '', r: 'extra', at: performance.now() };
     hudDirty = true;
   }
 
@@ -1674,7 +2138,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     if (s.song) songDirty = true;
     if (s.mode === 'calib') { finishCalib(s); toIdle(); return; }
     const judged = s.counts.perfect + s.counts.good + s.counts.ok + s.counts.miss;
-    if (judged < 4) { toIdle(); toast(aborted ? 'Đã dừng. Chưa đủ nốt để chấm điểm.' : 'Bài tập đã kết thúc.'); return; }
+    if (judged < 4) { toIdle(); toast(t(aborted ? 'toast.stoppedFew' : 'toast.finished')); return; }
     const res = computeResult(s, aborted);
     if (!res.stoppedEarly) { try { chime(res.pass); } catch (e) { /* ignore */ } }
     saveHistory(res); renderHistory();
@@ -1683,8 +2147,8 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
   function finishCalib(s) {
     const offs = s.calibOffs.map((x) => x * 1000);
     if (offs.length < 8) {
-      setCalibMsg('Chưa đủ dữ liệu: cần ít nhất 8 lần gõ trùng tiếng click. Hãy đo lại.', 'warn');
-      toast('Đo độ trễ chưa xong.');
+      setCalibMsg('calib.few', null, 'warn');
+      toast(t('toast.calibFail'));
       return;
     }
     const use = offs.length > 12 ? offs.slice(4) : offs;
@@ -1693,8 +2157,8 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     const val = clamp(Math.round(m), -150, 350);
     settings.latency = val; saveSettings(); syncForm();
     const shaky = mad > 30;
-    setCalibMsg(`Độ trễ đo được: ${fmtMs(val)}${shaky ? `, dao động ±${Math.round(mad)} ms nên đo lại một lần nữa` : ''}. Đã áp dụng vào Bù trễ.`, shaky ? 'warn' : 'ok');
-    toast(`Đã đặt bù trễ ${fmtMs(val)}.`);
+    setCalibMsg(shaky ? 'calib.resultShaky' : 'calib.result', { val: fmtMs(val), mad: Math.round(mad) }, shaky ? 'warn' : 'ok');
+    toast(t('toast.calibSet', { val: fmtMs(val) }));
   }
   function toIdle() {
     el.laneHint.hidden = false;
@@ -1838,41 +2302,43 @@ self.onmessage = (e) => {
       } catch (e) { fail(); }
     });
   }
-  function songStatus(p, text, isErr) {
+  let songSt = null; // last status message, kept as a key so a language switch can re-render it
+  function songStatus(p, key, args, isErr) {
+    songSt = { key, args };
     el.songStatus.hidden = false;
     el.songStatus.classList.toggle('err', !!isErr);
     el.songProg.style.width = Math.round(clamp(p, 0, 1) * 100) + '%';
-    setText(el.songStatusText, text);
+    setText(el.songStatusText, t(key, args));
   }
   async function loadSong(file) {
     if (!file) return;
-    if (busyNow()) { toast('Hãy dừng bài đang chơi trước khi tải file mới.'); return; }
-    if (file.size > 300 * 1024 * 1024) { songStatus(0, 'File lớn quá 300 MB. Hãy chọn file nhỏ hơn.', true); return; }
+    if (busyNow()) { toast(t('toast.busyLoad')); return; }
+    if (file.size > 300 * 1024 * 1024) { songStatus(0, 'st.tooBig', null, true); return; }
     stopAudition();
     const token = ++loadToken;
-    const name = file.name || 'Bài hát';
+    const name = file.name || t('song.default');
     el.songDrop.classList.add('busy');
-    songStatus(0.02, `Đang đọc “${shortName(name, 48)}”…`);
+    songStatus(0.02, 'st.reading', { name: shortName(name, 48) });
     try {
       const arr = await readFileBuffer(file);
       if (token !== loadToken) return;
       createAudio();
-      songStatus(0.06, 'Đang giải mã âm thanh…');
+      songStatus(0.06, 'st.decoding');
       const buffer = await decodeAudio(arr);
       if (token !== loadToken) return;
-      if (buffer.duration < 6) { songStatus(0, 'Bài quá ngắn để phân tích, cần ít nhất 6 giây.', true); return; }
-      songStatus(0.1, 'Đang phân tích beat… 10%');
+      if (buffer.duration < 6) { songStatus(0, 'st.tooShort', null, true); return; }
+      songStatus(0.1, 'st.analyzing', { p: 10 });
       const res = await runAnalysis(() => mixDown(buffer), (p) => {
-        if (token === loadToken) { const q = 0.1 + 0.88 * p; songStatus(q, `Đang phân tích beat… ${Math.round(q * 100)}%`); }
+        if (token === loadToken) { const q = 0.1 + 0.88 * p; songStatus(q, 'st.analyzing', { p: Math.round(q * 100) }); }
       });
       if (token !== loadToken) return;
       if (!res || !(res.bpm > 0) || res.times.length < 8) {
-        songStatus(0, 'Không tìm thấy nhịp rõ ràng trong file này. Hãy thử một bài có trống hoặc nhịp đều hơn.', true);
+        songStatus(0, 'st.noBeat', null, true);
         return;
       }
       applyAnalysis(name, buffer, res);
     } catch (e) {
-      if (token === loadToken) songStatus(0, 'Không đọc được file này. Hãy thử MP3, WAV hoặc M4A.', true);
+      if (token === loadToken) songStatus(0, 'st.cantRead', null, true);
     } finally {
       if (token === loadToken) el.songDrop.classList.remove('busy');
       el.songFile.value = '';
@@ -1895,8 +2361,8 @@ self.onmessage = (e) => {
     renderSongInfo();
     syncForm(); refreshPreview(); applyLocks();
     songDirty = true;
-    toast(`Đã phân tích xong: khoảng ${Math.round(SONG.bpm)} BPM. Nhấn Space để gõ theo bài.`);
-    announce(`Phân tích xong. Tempo khoảng ${Math.round(SONG.bpm)} BPM, ${SONG.times.length} beat.`);
+    toast(t('toast.analyzed', { bpm: Math.round(SONG.bpm) }));
+    announce(t('ann.analyzed', { bpm: Math.round(SONG.bpm), n: SONG.times.length }));
   }
   function recomputeDownbeat(keepTime) {
     if (!SONG) return;
@@ -1926,7 +2392,7 @@ self.onmessage = (e) => {
     if (!SONG || busyNow()) return;
     const keep = SONG.times[SONG.startIdx];
     const r = mainBA().retrack(SONG.res, bpm);
-    if (r.times.length < 8) { toast('Không dò được beat ở tempo này.'); return; }
+    if (r.times.length < 8) { toast(t('toast.noTrack')); return; }
     stopAudition();
     Object.assign(SONG, { times: r.times, localBpm: r.localBpm, bpm: r.bpm, jitter: r.jitter, trackBpm: bpm });
     recomputeDownbeat(keep);
@@ -1939,10 +2405,10 @@ self.onmessage = (e) => {
     if (restartAudition && aud) { stopAudition(); toggleAudition(); }
   }
   function confLevel(c) {
-    if (c >= 0.35) return { label: 'Rất rõ', key: 'perfect' };
-    if (c >= 0.15) return { label: 'Rõ', key: 'good' };
-    if (c >= 0.08) return { label: 'Trung bình', key: 'ok' };
-    return { label: 'Yếu, nên kiểm tra bằng tai', key: 'miss' };
+    if (c >= 0.35) return { label: t('conf.4'), key: 'perfect' };
+    if (c >= 0.15) return { label: t('conf.3'), key: 'good' };
+    if (c >= 0.08) return { label: t('conf.2'), key: 'ok' };
+    return { label: t('conf.1'), key: 'miss' };
   }
   function renderSongInfo() {
     const s = SONG; if (!s) return;
@@ -1965,16 +2431,16 @@ self.onmessage = (e) => {
       const btn = document.createElement('button');
       btn.type = 'button'; btn.className = 'alt-chip';
       btn.textContent = `${Math.round(b)} BPM`;
-      btn.title = 'Dò lại beat theo tempo này';
+      btn.title = t('song.altTitle');
       btn.setAttribute('aria-pressed', String(Math.abs(Math.log(b / s.trackBpm)) < 0.03));
       btn.disabled = busyNow();
       btn.addEventListener('click', () => chooseTempo(b));
       el.songAlts.appendChild(btn);
     }
-    el.songUseBpmBtn.textContent = `Dùng ${clamp(Math.round(s.bpm), BPM_MIN, BPM_MAX)} BPM cho metronome`;
+    el.songUseBpmBtn.textContent = t('song.useBpm', { bpm: clamp(Math.round(s.bpm), BPM_MIN, BPM_MAX) });
     let lo = Infinity, hi = -Infinity;
     for (const v of s.localBpm) { if (v < lo) lo = v; if (v > hi) hi = v; }
-    setText(el.tempoNote, `trung bình ${nf1.format(s.bpm)} BPM · từ ${Math.round(lo)} đến ${Math.round(hi)}`);
+    setText(el.tempoNote, t('song.tempoNote', { avg: nf1.format(s.bpm), lo: Math.round(lo), hi: Math.round(hi) }));
     updateSongStartLabel();
   }
   function updateSongStartLabel() {
@@ -1982,8 +2448,8 @@ self.onmessage = (e) => {
     const plan = songPlan(settings), M = settings.beats;
     const barNo = Math.floor((SONG.startIdx - SONG.phase) / M) + 1;
     setText(el.songStartLbl, plan.bars > 0
-      ? `Bắt đầu từ ô ${barNo} (${fmtTime(SONG.times[SONG.startIdx])}) · ${plan.bars} ô được chấm`
-      : 'Chỗ bắt đầu quá gần cuối bài');
+      ? t('song.start', { bar: barNo, time: fmtTime(SONG.times[SONG.startIdx]), n: plan.bars })
+      : t('song.startLate'));
   }
 
   /* ---------- audition ---------- */
@@ -2005,7 +2471,7 @@ self.onmessage = (e) => {
     aud = { src, sg, bus, T0, a0, next: lowerBound(SONG.times, a0), timer: setInterval(audTick, TICK_MS) };
     src.onended = () => { if (aud && aud.src === src) stopAudition(); };
     clockDiff = null; sampleClock();
-    setText(el.songPlayBtn, 'Dừng nghe');
+    setText(el.songPlayBtn, t('song.stopListen'));
     audTick();
   }
   function audTick() {
@@ -2027,7 +2493,7 @@ self.onmessage = (e) => {
     clearInterval(a.timer);
     try { a.bus.gain.setTargetAtTime(0, A.ctx.currentTime, 0.01); } catch (e) { /* ignore */ }
     setTimeout(() => { try { a.src.stop(); } catch (e) { /* ignore */ } try { a.bus.disconnect(); } catch (e) { /* ignore */ } }, 80);
-    setText(el.songPlayBtn, 'Nghe thử');
+    setText(el.songPlayBtn, t('song.listen'));
     songDirty = true;
   }
   function songPlayhead() {
@@ -2107,7 +2573,7 @@ self.onmessage = (e) => {
       const down = (((k - s.phase) % M) + M) % M === 0;
       g.fillStyle = C.ink; g.globalAlpha = down ? 0.85 : 0.35;
       g.fillRect(down ? x - 1 : x, top - 6, down ? 2 : 1, base - top + 6);
-      if (down && k >= s.phase) { g.globalAlpha = 1; g.fillStyle = C.muted; g.fillText('Ô ' + (Math.floor((k - s.phase) / M) + 1), x + 4, 3); }
+      if (down && k >= s.phase) { g.globalAlpha = 1; g.fillStyle = C.muted; g.fillText(t('bar.n', { n: Math.floor((k - s.phase) / M) + 1 }), x + 4, 3); }
     }
     g.globalAlpha = 1;
     g.fillStyle = C.muted; g.textBaseline = 'bottom'; g.textAlign = 'center';
@@ -2162,7 +2628,7 @@ self.onmessage = (e) => {
     const x = tempoGeo.X(SONG.times[i]), y = tempoGeo.Y(SONG.localBpm[i]);
     el.tempoTip.textContent = '';
     const strong = document.createElement('strong'); strong.textContent = `${nf1.format(SONG.localBpm[i])} BPM`;
-    const span = document.createElement('span'); span.textContent = `beat ${i + 1} · ${fmtTime(SONG.times[i])}`;
+    const span = document.createElement('span'); span.textContent = t('song.beatTip', { n: i + 1, time: fmtTime(SONG.times[i]) });
     el.tempoTip.append(strong, span);
     const W = (sizes.get(el.tempoCv) || {}).w || el.tempoCv.clientWidth;
     el.tempoTip.style.left = clamp(x, 70, Math.max(70, W - 70)) + 'px';
@@ -2213,9 +2679,9 @@ self.onmessage = (e) => {
     const cfg = o.cfg, G = laneGeo(W, H), u = G.u;
     const pps = ppsFor(cfg, W); // follows the lane width, e.g. when the phone turns to landscape
     if (live) S.pps = pps;
-    const t = live ? vt : o.viewT;
-    const X = (tt) => G.playX + (tt - t) * pps;
-    const tMin = t - (G.playX - G.clefW + 40) / pps, tMax = t + (W - G.playX + 40) / pps;
+    const tNow = live ? vt : o.viewT;
+    const X = (tt) => G.playX + (tt - tNow) * pps;
+    const tMin = tNow - (G.playX - G.clefW + 40) / pps, tMax = tNow + (W - G.playX + 40) / pps;
     const now = performance.now();
     const ev = o.events;
     if (live) while (S.drawFrom < ev.length - 1 && ev[S.drawFrom].t < tMin - 1.5) S.drawFrom++;
@@ -2253,7 +2719,7 @@ self.onmessage = (e) => {
       g.textAlign = 'center'; g.textBaseline = 'middle';
       for (const [a, b] of spans) {
         const x1 = Math.max(a, G.clefW), x2 = Math.min(b, W);
-        if (x2 - x1 > 110) { const cx = (x1 + x2) / 2; g.globalAlpha = fadeAlpha(G, cx); g.fillText('click tắt · giữ nhịp', cx, G.staffY - 26 * u); }
+        if (x2 - x1 > 110) { const cx = (x1 + x2) / 2; g.globalAlpha = fadeAlpha(G, cx); g.fillText(t('lane.silent'), cx, G.staffY - 26 * u); }
       }
       g.globalAlpha = 1;
     }
@@ -2332,7 +2798,7 @@ self.onmessage = (e) => {
     g.beginPath(); g.ellipse(G.playX, G.staffY, G.rx + 5, G.ry + 5, -0.35, 0, Math.PI * 2); g.stroke();
     g.fillStyle = C.accent; g.font = `600 ${Math.round(9.5 * u + 0.5)}px ${FONT_BODY}`;
     g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    g.fillText('ĐÍCH', G.playX, H - 5);
+    g.fillText(t('lane.target'), G.playX, H - 5);
 
     // clef + time signature, with past notes fading under it
     const mw = G.clefW + 36;
@@ -2511,7 +2977,12 @@ self.onmessage = (e) => {
     setText(el.calibCount, String(s.calibOffs.length));
     setText(el.calibMed, s.calibOffs.length >= 3 ? fmtMs(median(s.calibOffs) * 1000) : '—');
   }
-  function setCalibMsg(msg, kind) { el.calibMsg.hidden = false; el.calibMsg.textContent = msg; el.calibMsg.className = 'hint ' + (kind || ''); }
+  let calibSt = null; // last calibration message, kept as a key so a language switch can re-render it
+  function setCalibMsg(key, args, kind) { calibSt = { key, args, kind }; renderCalibMsg(); }
+  function renderCalibMsg() {
+    if (!calibSt) return;
+    el.calibMsg.hidden = false; el.calibMsg.textContent = t(calibSt.key, calibSt.args); el.calibMsg.className = 'hint ' + (calibSt.kind || '');
+  }
   function accClass(acc, target) {
     if (acc == null) return '';
     return acc >= 95 ? 'r-perfect' : acc >= target ? 'r-good' : acc >= target - 15 ? 'r-ok' : 'r-miss';
@@ -2535,15 +3006,15 @@ self.onmessage = (e) => {
     const c = o.cfg;
     if (o.song) {
       const p = o.song.plan;
-      setText(el.progLabel, `${p.bars} ô · ${fmtTime(p.end - p.start)} · từ ${fmtTime(p.start)}`);
-      segs.forEach((sg, k) => setSeg(sg, 'seg', 0, `Ô ${k + 1}`));
+      setText(el.progLabel, t('prog.song', { n: p.bars, dur: fmtTime(p.end - p.start), start: fmtTime(p.start) }));
+      segs.forEach((sg, k) => setSeg(sg, 'seg', 0, t('bar.n', { n: k + 1 })));
       return;
     }
     const finite = c.length > 0, n = finite ? c.length : 16;
     let dur = 0;
     for (let b = 0; b < n; b++) dur += (c.beats * 60) / bpmForBar(c, b);
-    setText(el.progLabel, finite ? `${c.length} ô · ${fmtTime(dur)}` : `Không giới hạn · ${fmtTime(dur)} mỗi 16 ô`);
-    segs.forEach((sg, k) => setSeg(sg, 'seg' + (barAudible(c, k) ? '' : ' silent'), 0, `Ô ${k + 1}${barAudible(c, k) ? '' : ' (click tắt)'}`));
+    setText(el.progLabel, finite ? t('prog.len', { n: c.length, dur: fmtTime(dur) }) : t('prog.inf', { dur: fmtTime(dur) }));
+    segs.forEach((sg, k) => setSeg(sg, 'seg' + (barAudible(c, k) ? '' : ' silent'), 0, t('bar.n', { n: k + 1 }) + (barAudible(c, k) ? '' : t('bar.clickOff'))));
   }
   function updateProgress(s, vt) {
     const bars = s.bars;
@@ -2556,7 +3027,7 @@ self.onmessage = (e) => {
     for (let k = 0; k < segs.length; k++) {
       const bi = base + k;
       let cls = 'seg' + (barAudible(s.cfg, bi) ? '' : ' silent');
-      let wpct = 0, title = `Ô ${bi + 1}`;
+      let wpct = 0, title = t('bar.n', { n: bi + 1 });
       if (finite && bi >= s.totalBars) { setSeg(segs[k], 'seg', 0, title); continue; }
       if (cb >= 0 && bi < cb) {
         const st = s.barStats[bi];
@@ -2569,9 +3040,9 @@ self.onmessage = (e) => {
     }
     const elapsed = Math.max(0, vt - s.firstT);
     let label;
-    if (s.mode === 'calib') label = 'Đang đo độ trễ…';
-    else if (cb < 0) label = 'Đếm vào…';
-    else label = finite ? `Ô ${cb + 1}/${s.totalBars} · ${fmtTime(elapsed)} / ${fmtTime(s.total)}` : `Ô ${cb + 1} · ${fmtTime(elapsed)}`;
+    if (s.mode === 'calib') label = t('prog.calib');
+    else if (cb < 0) label = t('prog.countin');
+    else label = finite ? t('prog.barOf', { cb: cb + 1, total: s.totalBars, el: fmtTime(elapsed), tot: fmtTime(s.total) }) : t('prog.bar', { cb: cb + 1, el: fmtTime(elapsed) });
     setText(el.progLabel, label);
   }
   function renderScore() {
@@ -2584,7 +3055,7 @@ self.onmessage = (e) => {
     el.accFill.style.width = (acc == null ? 0 : clamp(acc, 0, 100)) + '%';
     el.targetBar.classList.toggle('pass', acc != null && acc >= target);
     el.targetMark.style.left = target + '%';
-    setText(el.accLabel, `${fmtPct(acc)} · mục tiêu ${target}%`);
+    setText(el.accLabel, t('acc.label', { acc: fmtPct(acc), target }));
     setText(el.lastOff, s && s.lastOff != null ? describeOff(s.lastOff * 1000) : '—');
     const last = s ? s.recent.slice(-12) : [];
     setText(el.avgOff, last.length >= 3 ? describeOff(avg(last.map((x) => x.off)) * 1000) : '—');
@@ -2611,7 +3082,7 @@ self.onmessage = (e) => {
   }
   function setStartBtn() {
     const busy = busyNow();
-    el.startBtn.innerHTML = busy ? 'Dừng <kbd>Esc</kbd>' : 'Bắt đầu';
+    el.startBtn.innerHTML = busy ? t('stop.esc') : t('start');
     el.startBtn.classList.toggle('is-stop', busy);
   }
   function applyLocks() {
@@ -2707,30 +3178,28 @@ self.onmessage = (e) => {
     const c = res.cfg;
     const parts = [];
     if (res.song) parts.push(`♪ ${shortName(res.song, 32)}`);
-    parts.push(res.song ? `khoảng ${c.bpm} BPM` : res.bpmEnd !== c.bpm ? `${c.bpm}→${res.bpmEnd} BPM` : `${c.bpm} BPM`);
-    parts.push(`${c.beats}/4`, SUB_NAME[c.sub]);
+    parts.push(res.song ? t('meta.about', { bpm: c.bpm }) : res.bpmEnd !== c.bpm ? `${c.bpm}→${res.bpmEnd} BPM` : `${c.bpm} BPM`);
+    parts.push(`${c.beats}/4`, subName(c.sub));
     const total = res.totalBars || c.length;
-    parts.push(total ? `${res.barsPlayed}/${total} ô` : `${res.barsPlayed} ô`);
-    parts.push(`độ khó ${DIFF[c.diff].name.toLowerCase()}`);
-    if (!res.song && GAPS[c.gap]) parts.push(`click ${GAPS[c.gap][0]} ô có, ${GAPS[c.gap][1]} ô im`);
+    parts.push(total ? t('meta.barsOf', { a: res.barsPlayed, b: total }) : t('meta.bars', { n: res.barsPlayed }));
+    parts.push(t('meta.diff', { d: t('diff.' + c.diff).toLowerCase() }));
+    if (!res.song && GAPS[c.gap]) parts.push(t('meta.gap', { a: GAPS[c.gap][0], b: GAPS[c.gap][1] }));
     return parts.join(' · ');
   }
   function tipsFor(res) {
-    const t = [], m = res.mean, sdv = res.sd;
-    if (m != null && m <= -8) t.push(`Bạn có xu hướng gõ sớm khoảng ${Math.round(-m)} ms. Thả lỏng tay, chờ ${res.song ? 'beat của bài' : 'tiếng click'} rồi gõ trùng với nó.`);
-    else if (m != null && m >= 8) t.push(`Bạn có xu hướng gõ muộn khoảng ${Math.round(m)} ms. Đếm thầm trước mỗi phách để gõ chủ động thay vì phản xạ theo ${res.song ? 'nhạc' : 'tiếng click'}.`);
+    const tips = [], m = res.mean, sdv = res.sd, kind = res.song ? 'song' : 'metro';
+    if (m != null && m <= -8) tips.push(t('tip.early.' + kind, { ms: Math.round(-m) }));
+    else if (m != null && m >= 8) tips.push(t('tip.late.' + kind, { ms: Math.round(m) }));
     if (res.drift != null && Math.abs(res.drift) >= 10) {
-      t.push(res.drift < 0
-        ? `Nửa sau bài bạn gõ sớm hơn nửa đầu ${Math.round(-res.drift)} ms, dấu hiệu bị nhanh dần (rushing).`
-        : `Nửa sau bài bạn gõ muộn hơn nửa đầu ${Math.round(res.drift)} ms, dấu hiệu bị chậm dần (dragging).`);
+      tips.push(res.drift < 0 ? t('tip.rush', { ms: Math.round(-res.drift) }) : t('tip.drag', { ms: Math.round(res.drift) }));
     }
     if (res.silentAcc != null && res.loudAcc != null && res.loudAcc - res.silentAcc >= 8) {
-      t.push(`Ở các ô im, độ chính xác còn ${fmtPct(res.silentAcc)} so với ${fmtPct(res.loudAcc)} khi có click. Đếm thầm "1 2 3 4" trong các ô im.`);
+      tips.push(t('tip.silent', { s: fmtPct(res.silentAcc), l: fmtPct(res.loudAcc) }));
     }
-    if (sdv != null && sdv > res.win.good * 0.9) t.push(`Độ dao động ±${Math.round(sdv)} ms còn lớn. ${res.song ? 'Bật Kèm click theo beat để có điểm tựa' : 'Hạ tempo khoảng 10%'} để luyện độ đều trước.`);
-    if (res.counts.extra >= 3) t.push(`Có ${res.counts.extra} lần gõ thừa. Mỗi nốt chỉ gõ một lần.`);
-    if (!t.length) t.push(res.pass ? (res.song ? 'Nhịp rất chắc. Thử tắt click theo beat, hoặc chuyển sang gõ móc đơn.' : 'Nhịp rất chắc. Thử tăng tempo hoặc bật click ngắt quãng để nâng độ khó.') : 'Thử lại và tập trung gõ trùng beat, đừng nhìn nốt mà hãy nghe.');
-    return t.slice(0, 3);
+    if (sdv != null && sdv > res.win.good * 0.9) tips.push(t('tip.spread.' + kind, { sd: Math.round(sdv) }));
+    if (res.counts.extra >= 3) tips.push(t('tip.extra', { n: res.counts.extra }));
+    if (!tips.length) tips.push(res.pass ? t('tip.good.' + kind) : t('tip.retry'));
+    return tips.slice(0, 3);
   }
   function nextBpmFor(res) {
     const b = res.cfg.bpm;
@@ -2741,9 +3210,21 @@ self.onmessage = (e) => {
   }
   function showResults(res) {
     lastResult = res; phase = 'results'; resultsAt = performance.now();
+    renderResults(res);
+    chartSel = null; hideTip();
+    el.stage.classList.add('show-results');
+    el.results.hidden = false;
+    requestAnimationFrame(drawResultChart);
+    try { el.results.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+    const r = el.stage.getBoundingClientRect();
+    if (r.top < 0) el.stage.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+    announce(t('res.announce', { verdict: el.resVerdict.textContent, acc: fmtPct(res.acc), grade: res.grade }));
+  }
+  /* All text of the results panel; called again when the language changes. */
+  function renderResults(res) {
     el.results.dataset.state = res.stoppedEarly ? 'stopped' : res.pass ? 'pass' : 'fail';
     el.resGrade.textContent = res.grade;
-    el.resVerdict.textContent = res.stoppedEarly ? 'Đã dừng giữa chừng' : res.pass ? 'Đạt mục tiêu' : 'Chưa đạt mục tiêu';
+    el.resVerdict.textContent = t(res.stoppedEarly ? 'res.stopped' : res.pass ? 'res.pass' : 'res.fail');
     el.resAcc.textContent = fmtPct(res.acc);
     el.resTarget.textContent = res.cfg.target + '%';
     el.resMeta.textContent = metaLine(res);
@@ -2756,15 +3237,11 @@ self.onmessage = (e) => {
       dd.textContent = String(value);
       d.append(dt, dd); el.resStats.appendChild(d);
     };
-    stat('Hoàn hảo', res.counts.perfect, 'perfect');
-    stat('Tốt', res.counts.good, 'good');
-    stat('Khá', res.counts.ok, 'ok');
-    stat('Trượt', res.counts.miss, 'miss');
-    stat('Gõ thừa', res.counts.extra, 'extra');
-    stat('Combo dài nhất', res.maxCombo);
-    stat('Lệch trung bình', res.mean == null ? '—' : describeOff(res.mean));
-    stat('Độ dao động', res.sd == null ? '—' : '±' + Math.round(res.sd) + ' ms');
-    stat('Điểm', nf0.format(res.score));
+    for (const k of ['perfect', 'good', 'ok', 'miss', 'extra']) stat(t('j.' + k), res.counts[k], k);
+    stat(t('res.maxCombo'), res.maxCombo);
+    stat(t('res.mean'), res.mean == null ? '—' : describeOff(res.mean));
+    stat(t('res.sd'), res.sd == null ? '—' : '±' + Math.round(res.sd) + ' ms');
+    stat(t('sb.score'), nf0.format(res.score));
 
     el.resLegend.textContent = '';
     const li = (label, kind) => {
@@ -2774,18 +3251,19 @@ self.onmessage = (e) => {
       else { k.className = 'dot'; k.style.background = `var(--j-${kind})`; }
       l.append(k, document.createTextNode(label)); el.resLegend.appendChild(l);
     };
-    li('Hoàn hảo', 'perfect'); li('Tốt', 'good'); li('Khá', 'ok'); li('Trượt', 'miss'); li('Xu hướng (TB 9 nốt)', 'line');
-    if (res.silent.length) li('Ô im', 'silent');
+    for (const k of ['perfect', 'good', 'ok', 'miss']) li(t('j.' + k), k);
+    li(t('res.trend'), 'line');
+    if (res.silent.length) li(t('res.silentBars'), 'silent');
 
     el.resBars.textContent = '';
     for (const b of res.bars) {
       const d = document.createElement('div');
       d.className = ['seg', b.audible ? '' : 'silent', accClass(b.acc, res.cfg.target)].filter(Boolean).join(' ');
-      d.title = `Ô ${b.b + 1}: ${fmtPct(b.acc)}${b.audible ? '' : ' (ô im)'}`;
+      d.title = `${t('bar.n', { n: b.b + 1 })}: ${fmtPct(b.acc)}${b.audible ? '' : t('bar.silent')}`;
       el.resBars.appendChild(d);
     }
     const passBars = res.bars.filter((b) => b.acc != null && b.acc >= res.cfg.target).length;
-    el.resBarsNote.textContent = `${passBars}/${res.bars.length} ô đạt mục tiêu`;
+    el.resBarsNote.textContent = t('res.barsPass', { a: passBars, b: res.bars.length });
 
     el.resTips.textContent = '';
     for (const tip of tipsFor(res)) { const l = document.createElement('li'); l.textContent = tip; el.resTips.appendChild(l); }
@@ -2794,17 +3272,8 @@ self.onmessage = (e) => {
 
     const nb = nextBpmFor(res);
     el.nextBtn.hidden = nb === res.cfg.bpm;
-    el.nextBtn.textContent = `Thử ${nb} BPM`;
+    el.nextBtn.textContent = t('res.try', { bpm: nb });
     el.nextBtn.dataset.bpm = String(nb);
-
-    chartSel = null; hideTip();
-    el.stage.classList.add('show-results');
-    el.results.hidden = false;
-    requestAnimationFrame(drawResultChart);
-    try { el.results.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
-    const r = el.stage.getBoundingClientRect();
-    if (r.top < 0) el.stage.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
-    announce(`${el.resVerdict.textContent}. Độ chính xác ${fmtPct(res.acc)}, hạng ${res.grade}.`);
   }
   function closeResults() {
     el.results.hidden = true;
@@ -2816,14 +3285,14 @@ self.onmessage = (e) => {
   function renderResultTable(res) {
     const tbl = el.resTable; tbl.textContent = '';
     const thead = document.createElement('thead'), hr = document.createElement('tr');
-    for (const [h, num] of [['Ô', false], ['Tempo', true], ['Click', false], ['Chính xác', true], ['Lệch TB', true], ['Trượt', true]]) {
-      const th = document.createElement('th'); th.textContent = h; if (num) th.className = 'num'; hr.appendChild(th);
+    for (const [h, num] of [['tbl.bar', false], ['tbl.tempo', true], ['tbl.click', false], ['tbl.acc', true], ['tbl.mean', true], ['tbl.miss', true]]) {
+      const th = document.createElement('th'); th.textContent = t(h); if (num) th.className = 'num'; hr.appendChild(th);
     }
     thead.appendChild(hr); tbl.appendChild(thead);
     const tb = document.createElement('tbody');
     for (const b of res.bars) {
       const tr = document.createElement('tr');
-      const cells = [[String(b.b + 1), false], [String(b.bpm), true], [b.audible ? 'có' : 'im', false], [fmtPct(b.acc), true], [b.mean == null ? '—' : fmtMs(b.mean), true], [String(b.miss), true]];
+      const cells = [[String(b.b + 1), false], [String(b.bpm), true], [t(b.audible ? 'tbl.on' : 'tbl.off'), false], [fmtPct(b.acc), true], [b.mean == null ? '—' : fmtMs(b.mean), true], [String(b.miss), true]];
       for (const [v, num] of cells) { const td = document.createElement('td'); td.textContent = v; if (num) td.className = 'num'; tr.appendChild(td); }
       tb.appendChild(tr);
     }
@@ -2859,20 +3328,21 @@ self.onmessage = (e) => {
       g.fillText(v === 0 ? '0' : (v > 0 ? '+' : '−') + Math.abs(Math.round(v)), padL - 7, y);
     }
     g.textAlign = 'left'; g.font = `600 10px ${FONT_BODY}`; g.fillStyle = C.muted;
-    g.fillText('MUỘN', padL + 6, padT + 9);
-    g.fillText('SỚM', padL + 6, padT + ph - 9);
+    g.fillText(t('chart.late'), padL + 6, padT + 9);
+    g.fillText(t('chart.early'), padL + 6, padT + ph - 9);
     g.textAlign = 'right'; g.font = `500 10px ${FONT_BODY}`;
-    g.fillText('không gõ', padL - 7, missY);
+    g.fillText(t('chart.noTap'), padL - 7, missY);
     g.fillStyle = C.line; g.fillRect(padL, padT + ph + missRow + 0.5, pw, 1);
 
     g.textAlign = 'center'; g.textBaseline = 'top'; g.font = `500 10.5px ${FONT_DATA}`;
     let lastX = -1e9;
+    const labelGap = Math.max(44, g.measureText(t('bar.n', { n: 88 })).width + 12); // "Bar 12" needs more room than "Ô 12"
     for (const bs of res.barStarts) {
       const x = X(bs.t);
-      if (x - lastX < 44) continue;
+      if (x - lastX < labelGap) continue;
       lastX = x;
       g.fillStyle = C.line; g.fillRect(Math.round(x), padT + ph + missRow, 1, 5);
-      g.fillStyle = C.muted; g.fillText('Ô ' + (bs.b + 1), clamp(x, padL + 10, padL + pw - 10), padT + ph + missRow + 7);
+      g.fillStyle = C.muted; g.fillText(t('bar.n', { n: bs.b + 1 }), clamp(x, padL + 10, padL + pw - 10), padT + ph + missRow + 7);
     }
 
     const tapped = res.hits.filter((h) => h.off != null);
@@ -2912,9 +3382,9 @@ self.onmessage = (e) => {
     const h = p.h;
     el.resTip.textContent = '';
     const strong = document.createElement('strong');
-    strong.textContent = h.off == null ? 'Không gõ' : describeOff(h.off);
+    strong.textContent = h.off == null ? t('ctip.noTap') : describeOff(h.off);
     const span = document.createElement('span');
-    span.textContent = `Ô ${h.bar + 1} · phách ${h.beat + 1}${h.sub > 1 ? '.' + (h.j + 1) : ''} · ${LABEL[h.r]}${h.silent ? ' · ô im' : ''}`;
+    span.textContent = `${t('ctip.where', { bar: h.bar + 1, beat: h.beat + 1 })}${h.sub > 1 ? '.' + (h.j + 1) : ''} · ${t('j.' + h.r)}${h.silent ? t('ctip.silent') : ''}`;
     el.resTip.append(strong, span);
     const W = (sizes.get(el.resChart) || {}).w || el.resChart.clientWidth;
     el.resTip.style.left = clamp(p.x, 80, Math.max(80, W - 80)) + 'px';
@@ -2941,21 +3411,21 @@ self.onmessage = (e) => {
     el.logBody.textContent = '';
     const any = list.length > 0;
     el.logTable.hidden = !any; el.logEmpty.hidden = any; el.clearLog.hidden = !any;
-    if (!any) { setText(el.logNote, 'Kết quả mỗi bài được lưu trên trình duyệt này để bạn theo dõi tiến bộ.'); return; }
+    if (!any) { setText(el.logNote, t('log.note0')); return; }
     let best = list[0];
     for (const h of list) if (h.acc > best.acc) best = h;
-    setText(el.logNote, `${list.length} lượt đã lưu trên trình duyệt này. Cao nhất: ${fmtPct(best.acc)} ở ${best.bpm} BPM, ${best.song ? '♪ ' + best.song : SUB_NAME[best.sub] || ''}.`);
+    setText(el.logNote, t('log.note', { n: list.length, acc: fmtPct(best.acc), bpm: best.bpm, what: best.song ? '♪ ' + best.song : subName(best.sub) }));
     for (const h of list.slice(0, 12)) {
       const tr = document.createElement('tr');
       const td = (content, cls) => { const c = document.createElement('td'); if (cls) c.className = cls; if (content instanceof Node) c.appendChild(content); else c.textContent = content; tr.appendChild(c); return c; };
       td(fmtDate(h.at));
-      const srcCell = td(h.song ? '♪ ' + h.song : 'Metronome', 'src');
+      const srcCell = td(h.song ? '♪ ' + h.song : t('src.metro'), 'src');
       if (h.song) srcCell.title = h.song;
       td(h.bpmEnd && h.bpmEnd !== h.bpm ? `${h.bpm}→${h.bpmEnd}` : String(h.bpm), 'num');
       td(`${h.beats}/4`);
-      td(SUB_NAME[h.sub] || '—');
+      td([1, 2, 3, 4].includes(+h.sub) ? t('subs.' + h.sub) : '—'); // short form keeps the table narrow
       td(h.length ? `${h.bars}/${h.length}` : String(h.bars), 'num');
-      td(DIFF[h.diff] ? DIFF[h.diff].name : '—');
+      td(has(DIFF, h.diff) ? t('diff.' + h.diff) : '—');
       const accCell = document.createElement('span'); accCell.className = 'acc-cell';
       const mini = document.createElement('span'); mini.className = 'mini' + (h.pass ? ' pass' : '');
       const fill = document.createElement('i'); fill.style.width = clamp(h.acc, 0, 100) + '%';
@@ -2963,7 +3433,7 @@ self.onmessage = (e) => {
       td(accCell, 'num');
       const chip = document.createElement('span'); chip.className = 'chip' + (h.pass ? ' pass' : '');
       const gb = document.createElement('b'); gb.textContent = h.grade || '—';
-      chip.append(gb, document.createTextNode(h.stopped ? 'dừng sớm' : h.pass ? 'đạt' : 'chưa đạt'));
+      chip.append(gb, document.createTextNode(t(h.stopped ? 'log.stopped' : h.pass ? 'log.pass' : 'log.fail')));
       td(chip);
       td(h.mean == null ? '—' : describeOff(h.mean), 'num');
       el.logBody.appendChild(tr);
@@ -2989,21 +3459,58 @@ self.onmessage = (e) => {
   function syncLabels() {
     const songSrc = effSource() === 'song', bpm = effBpm();
     if (!isActive()) { setText(el.bpmNum, String(bpm)); setText(el.tempoName, tempoName(bpm)); }
-    const meter = `${settings.beats}/4 · ${SUB_NAME[settings.sub]}`;
+    const meter = `${settings.beats}/4 · ${subName(settings.sub)}`;
     setText(el.meterLabel, songSrc ? `♪ ${shortName(SONG.name, 22)} · ${meter}` : meter);
-    setText(el.subVal, SUB_NAME[settings.sub]);
+    setText(el.subVal, subName(settings.sub));
     setText(el.targetVal, settings.target + '%');
     setText(el.volVal, settings.volume + '%');
     setText(el.latVal, fmtMs(settings.latency));
     const w = windowsFor(DIFF[settings.diff], 60 / bpm / settings.sub);
-    setText(el.diffNote, `Ở tempo này: Hoàn hảo ±${Math.round(w.perfect * 1000)} ms · Tốt ±${Math.round(w.good * 1000)} ms · Khá ±${Math.round(w.ok * 1000)} ms quanh nốt. Nốt càng dày thì cửa sổ càng hẹp.`);
+    setText(el.diffNote, t('diff.note', { p: Math.round(w.perfect * 1000), g: Math.round(w.good * 1000), o: Math.round(w.ok * 1000) }));
     el.pdWeight.setAttribute('y', (9 + ((bpm - BPM_MIN) / (BPM_MAX - BPM_MIN)) * 16).toFixed(1));
     setText(el.sourceNote, !SONG
-      ? 'Tải một bài ở mục Phân tích beat để gõ theo nhạc.'
+      ? t('src.none')
       : songSrc
-        ? `Đang gõ theo “${shortName(SONG.name, 40)}”, khoảng ${bpm} BPM. Tempo, click ngắt quãng và tăng tốc không dùng cho bài hát.`
-        : `Đã có bài “${shortName(SONG.name, 40)}”. Chọn Bài hát để gõ theo nhạc.`);
+        ? t('src.using', { name: shortName(SONG.name, 40), bpm })
+        : t('src.have', { name: shortName(SONG.name, 40) }));
     if (!isActive()) hudDirty = true;
+  }
+
+  /* ---------- language ---------- */
+  /* Static text carries data-i18n (text), data-i18n-html (trusted markup from the dictionary),
+     data-i18n-aria (aria-label) and data-i18n-title, with optional JSON data-i18n-args. */
+  function applyStatic() {
+    const argsOf = (n) => { const a = n.getAttribute('data-i18n-args'); if (!a) return null; try { return JSON.parse(a); } catch (e) { return null; } };
+    for (const n of document.querySelectorAll('[data-i18n]')) setText(n, t(n.getAttribute('data-i18n'), argsOf(n)));
+    for (const n of document.querySelectorAll('[data-i18n-html]')) n.innerHTML = t(n.getAttribute('data-i18n-html'), argsOf(n));
+    for (const n of document.querySelectorAll('[data-i18n-aria]')) n.setAttribute('aria-label', t(n.getAttribute('data-i18n-aria'), argsOf(n)));
+    for (const n of document.querySelectorAll('[data-i18n-title]')) n.setAttribute('title', t(n.getAttribute('data-i18n-title'), argsOf(n)));
+  }
+  function useLang(l) {
+    LANG = has(I18N, l) ? l : 'vi';
+    setNumberFormats();
+    document.documentElement.lang = LANG;
+    applyStatic();
+    for (const b of el.langSwitch.querySelectorAll('button[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === LANG));
+    if (!clearArmed) el.clearLog.textContent = t('log.clear');
+    setText(el.songPlayBtn, t(aud ? 'song.stopListen' : 'song.listen'));
+  }
+  /* Switches the whole page, including text that is built on the fly, then saves the choice. */
+  function setLang(l) {
+    if (l === LANG || !has(I18N, l)) return;
+    clearArmed = 0;
+    useLang(l);
+    settings.lang = LANG; saveSettings();
+    setStartBtn();
+    syncLabels();
+    if (phase === 'idle') refreshPreview(); // behind the results panel the stage keeps its state until the panel closes
+    renderHistory();
+    if (SONG) renderSongInfo();
+    if (songSt && !el.songStatus.hidden) setText(el.songStatusText, t(songSt.key, songSt.args));
+    renderCalibMsg();
+    el.tempoTip.hidden = true; hideTip();
+    if (phase === 'results' && lastResult) { renderResults(lastResult); drawResultChart(); } else hudDirty = true;
+    laneDirty = meterDirty = songDirty = true;
   }
   function refreshPreview() {
     if (isActive()) return;
@@ -3102,7 +3609,7 @@ self.onmessage = (e) => {
       'songSec', 'songDrop', 'songFile', 'songStatus', 'songProg', 'songStatusText', 'songBody', 'songBpmVal', 'songTempoName', 'songBpmPrecise',
       'songName', 'songDur', 'songBeats', 'songConf', 'songStab', 'songAlts', 'songStartLbl', 'waveCv', 'detailCv', 'songPlayBtn', 'songTime',
       'songClickIn', 'songVolIn', 'dbPrev', 'dbNext', 'tempoNote', 'tempoCv', 'tempoTip', 'songPracticeBtn', 'songUseBpmBtn',
-      'immStop', 'immGroup', 'immersiveIn'];
+      'immStop', 'immGroup', 'immersiveIn', 'langSwitch'];
     for (const id of ids) el[id] = document.getElementById(id);
     el.form = document.getElementById('settings');
     el.srcMetro = document.getElementById('src-metro');
@@ -3152,13 +3659,19 @@ self.onmessage = (e) => {
       const now = Date.now();
       if (now - clearArmed < 4000) {
         store.set(LS_HIST, []); clearArmed = 0;
-        el.clearLog.textContent = 'Xoá nhật ký';
-        renderHistory(); toast('Đã xoá nhật ký luyện tập.');
+        el.clearLog.textContent = t('log.clear');
+        renderHistory(); toast(t('toast.logCleared'));
         return;
       }
       clearArmed = now;
-      el.clearLog.textContent = 'Bấm lần nữa để xoá';
-      setTimeout(() => { if (clearArmed && Date.now() - clearArmed >= 3900) { clearArmed = 0; el.clearLog.textContent = 'Xoá nhật ký'; } }, 4100);
+      el.clearLog.textContent = t('log.confirm');
+      setTimeout(() => { if (clearArmed && Date.now() - clearArmed >= 3900) { clearArmed = 0; el.clearLog.textContent = t('log.clear'); } }, 4100);
+    });
+    el.langSwitch.addEventListener('click', (e) => {
+      const b = e.target && e.target.closest ? e.target.closest('button[data-lang]') : null;
+      if (!b) return;
+      setLang(b.dataset.lang);
+      if (e.detail > 0) b.blur(); // after a mouse/touch click, Space goes back to tapping instead of re-pressing this button
     });
 
     // ---- beat analysis ----
@@ -3205,7 +3718,7 @@ self.onmessage = (e) => {
       settings.source = 'metro';
       settings.bpm = clamp(Math.round(SONG.bpm), BPM_MIN, BPM_MAX);
       saveSettings(); syncForm(); applyLocks(); refreshPreview();
-      toast(`Metronome đã đặt ${settings.bpm} BPM.`);
+      toast(t('toast.metroSet', { bpm: settings.bpm }));
     });
     const waveSeek = (clientX) => {
       if (!SONG || busyNow()) return;
@@ -3242,7 +3755,7 @@ self.onmessage = (e) => {
     window.addEventListener('keyup', onKeyUp, true);
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) return;
-      if (isActive()) { finishSession(true); toast('Bài tập đã dừng vì trang bị ẩn.'); }
+      if (isActive()) { finishSession(true); toast(t('toast.hidden')); }
       if (aud) stopAudition();
     });
     if (window.ResizeObserver) {
@@ -3284,6 +3797,7 @@ self.onmessage = (e) => {
     data = data || {};
     if (data.settings) settings = sanitize(data.settings);
     cacheEls();
+    useLang(settings.lang);
     el.immGroup.hidden = !touchDevice();
     setAppSize();
     readColors();
