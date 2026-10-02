@@ -1,0 +1,3194 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3651e0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Nhịp Chuẩn">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Nhịp Chuẩn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Chakra+Petch:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: practice console — a white score display (scrolling one-line percussion staff, timing meter, progress bars)
+   set into a cool instrument-grey body; beat analysis and practice log stacked under it, settings rack on the right. */
+:root {
+  --bg: #e7e9ee;          /* instrument body */
+  --surface: #f5f6f8;     /* rack panels */
+  --screen: #ffffff;      /* score display */
+  --lane: #fbfbfd;        /* staff paper */
+  --ink: #121521;
+  --ink-2: #4b5163;
+  --muted: #6a7183;
+  --line: #d9dde4;
+  --staff: #a9b0bf;
+  --track: #eceef2;
+  --track-2: #d9dde5;
+  --accent: #3651e0;      /* the target line = a perfect hit */
+  --accent-ink: #ffffff;
+  --accent-wash: #e8ecfc;
+  --j-perfect: #3651e0;
+  --j-good: #13a07a;
+  --j-ok: #eaa000;
+  --j-miss: #d8343c;
+  --jt-perfect: #2c44c4;
+  --jt-good: #0b7a5c;
+  --jt-ok: #8f5b00;
+  --jt-miss: #bd2a33;
+  --veil: rgba(255, 255, 255, 0.94);
+  --shadow: 0 1px 0 rgba(18, 21, 33, 0.04), 0 10px 28px -16px rgba(18, 21, 33, 0.22);
+  --shadow-sm: 0 1px 2px rgba(18, 21, 33, 0.12);
+  --font-display: "Chakra Petch", "Be Vietnam Pro", system-ui, sans-serif;
+  --font-body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1016; --surface: #151821; --screen: #0b0d12; --lane: #0f1218;
+    --ink: #e9ecf4; --ink-2: #b0b7c7; --muted: #8a92a4; --line: #262b37; --staff: #444c5e;
+    --track: #1c202a; --track-2: #2a303c;
+    --accent: #6d82ff; --accent-ink: #0b0d12; --accent-wash: #1b2246;
+    --j-perfect: #6d82ff; --j-good: #16a37d; --j-ok: #c48300; --j-miss: #cd443a;
+    --jt-perfect: #9aa8ff; --jt-good: #3fcb9f; --jt-ok: #f0ae3a; --jt-miss: #ff7b70;
+    --veil: rgba(11, 13, 18, 0.94);
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 14px 32px -18px rgba(0, 0, 0, 0.8);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1016; --surface: #151821; --screen: #0b0d12; --lane: #0f1218;
+  --ink: #e9ecf4; --ink-2: #b0b7c7; --muted: #8a92a4; --line: #262b37; --staff: #444c5e;
+  --track: #1c202a; --track-2: #2a303c;
+  --accent: #6d82ff; --accent-ink: #0b0d12; --accent-wash: #1b2246;
+  --j-perfect: #6d82ff; --j-good: #16a37d; --j-ok: #c48300; --j-miss: #cd443a;
+  --jt-perfect: #9aa8ff; --jt-good: #3fcb9f; --jt-ok: #f0ae3a; --jt-miss: #ff7b70;
+  --veil: rgba(11, 13, 18, 0.94);
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 14px 32px -18px rgba(0, 0, 0, 0.8);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.9em; padding: 1px 6px;
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px;
+  background: var(--screen); color: var(--ink-2);
+  font: 600 11px/1.5 var(--font-data); letter-spacing: 0;
+}
+
+.app {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-inline: 20px;
+  padding-block: 22px 48px;
+  display: grid;
+  gap: 18px;
+}
+
+/* ---------- masthead ---------- */
+.masthead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 28px; }
+.brand { min-width: 0; }
+.brand h1 {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 700; font-size: 32px; line-height: 1.05;
+  letter-spacing: 0.01em; text-wrap: balance;
+}
+.brand p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; max-width: 60ch; }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-2); }
+.keys li { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- layout ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 328px;
+  grid-template-areas: "stage panel" "song panel" "log panel";
+  grid-template-rows: auto auto 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---------- stage ---------- */
+.stage {
+  grid-area: stage;
+  position: relative; min-width: 0;
+  background: var(--screen);
+  border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+  padding: 16px 18px 18px;
+  display: grid; gap: 14px;
+}
+.stage.show-results > :not(.results):not(.toast) { display: none !important; }
+
+.readout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 22px; }
+.tempo { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pendulum { width: 34px; height: 46px; flex: none; overflow: visible; }
+.pd-body { fill: var(--track); stroke: var(--staff); stroke-width: 1.2; }
+.pd-scale { stroke: var(--staff); stroke-width: 1; fill: none; }
+.pd-rod { stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; fill: none; }
+.pd-weight { fill: var(--accent); }
+.pd-pivot { fill: var(--ink); }
+.bpm-block { display: grid; gap: 1px; min-width: 0; }
+.bpm-line { display: flex; align-items: baseline; gap: 6px; }
+.bpm-num { font-family: var(--font-display); font-weight: 600; font-size: 44px; line-height: 0.95; letter-spacing: -0.01em; min-width: 2.2ch; }
+.bpm-unit { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.tempo-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 13px; color: var(--muted); min-width: 0; }
+.tempo-name em { font-family: var(--font-display); font-style: italic; font-weight: 600; font-size: 15px; color: var(--ink); }
+.tempo-name span { overflow-wrap: anywhere; }
+.bpm-steps { display: grid; gap: 4px; }
+.step-btn {
+  width: 30px; height: 26px; display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 7px; background: var(--surface);
+  font: 600 16px/1 var(--font-body); color: var(--ink-2);
+}
+.step-btn:hover:not(:disabled) { background: var(--track); color: var(--ink); }
+
+.leds { display: flex; align-items: center; gap: 10px; min-height: 18px; }
+.led { width: 11px; height: 11px; border-radius: 50%; background: var(--track-2); transition: background-color 70ms linear, transform 70ms ease-out; }
+.led.down { width: 16px; height: 16px; }
+.led.on { background: var(--ink-2); }
+.led.down.on { background: var(--accent); }
+.led.flash { transform: scale(1.3); }
+
+.scoreboard { display: flex; gap: 22px; margin: 0; }
+.scoreboard > div { display: grid; gap: 0; text-align: right; }
+.scoreboard dt { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.scoreboard dd { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+
+/* lane */
+.lane-wrap { position: relative; height: 180px; border: 1px solid var(--line); border-radius: 10px; background: var(--lane); overflow: hidden; }
+.lane-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.lane-hint {
+  position: absolute; top: 8px; right: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px 3px 6px; border-radius: 999px;
+  background: var(--veil); border: 1px solid var(--line);
+  font-size: 12.5px; color: var(--ink-2);
+}
+.countdown { position: absolute; top: 50%; left: 120px; transform: translate(-50%, -50%); display: grid; justify-items: center; pointer-events: none; }
+.countdown span { font: 700 56px/1 var(--font-display); color: var(--ink); }
+.countdown small { font-size: 10.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.countdown.pop span { animation: pop 240ms ease-out; }
+@keyframes pop { from { transform: scale(1.35); opacity: 0.35; } to { transform: scale(1); opacity: 1; } }
+.calib {
+  position: absolute; inset: 0;
+  display: grid; place-content: center; justify-items: center; gap: 6px;
+  padding: 12px 20px; text-align: center; background: var(--veil);
+}
+.calib h3 { margin: 0; font: 600 18px var(--font-display); }
+.calib p { margin: 0; max-width: 52ch; font-size: 14px; color: var(--ink-2); }
+.calib .calib-stat { color: var(--ink); }
+.calib .big { font: 700 26px var(--font-display); }
+
+/* rows above meters */
+.row-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; font-size: 13px; color: var(--ink-2); }
+.row-title { font-weight: 600; color: var(--ink); }
+.row-vals { font-variant-numeric: tabular-nums; }
+.row-vals strong { font-family: var(--font-data); font-weight: 600; font-size: 12.5px; color: var(--ink); }
+
+.meter-block { display: grid; gap: 6px; }
+.meter-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 10px; }
+.meter-row .side { padding-top: 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+#meter { display: block; width: 100%; height: 48px; }
+
+.bars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; }
+.bar-block { display: grid; gap: 7px; min-width: 0; }
+.progress { display: flex; gap: 2px; height: 14px; }
+.seg { position: relative; flex: 1 1 0; min-width: 0; border-radius: 3px; background: var(--track); overflow: hidden; }
+.seg > i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--ink-2); opacity: 0.3; }
+.seg.silent { background: repeating-linear-gradient(135deg, var(--track) 0 3px, var(--track-2) 3px 6px); }
+.seg.cur { box-shadow: inset 0 0 0 1.5px var(--ink-2); }
+.seg.r-perfect { background: var(--j-perfect); }
+.seg.r-good { background: var(--j-good); }
+.seg.r-ok { background: var(--j-ok); }
+.seg.r-miss { background: var(--j-miss); }
+.target-bar { position: relative; height: 14px; border-radius: 7px; background: var(--track); }
+.tb-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 7px; background: var(--j-ok); transition: width 160ms ease-out, background-color 160ms linear; }
+.target-bar.pass .tb-fill { background: var(--j-good); }
+.tb-mark { position: absolute; top: -5px; bottom: -5px; left: 85%; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--ink); }
+
+.controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+.tap-pad {
+  height: 64px; display: flex; align-items: center; justify-content: center; gap: 12px;
+  border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface);
+  font: 700 18px var(--font-display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink);
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  transition: transform 60ms ease-out, background-color 60ms linear, border-color 60ms linear;
+}
+.tap-pad:hover { border-color: var(--staff); }
+.tap-pad.hit { transform: translateY(2px); background: var(--accent-wash); border-color: var(--accent); }
+.btn-primary, .btn-secondary, .btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 46px; padding-inline: 20px; border-radius: 11px;
+  font-weight: 600; font-size: 15px; white-space: nowrap;
+}
+.btn-primary { border: 0; background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.07); }
+.btn-primary.is-stop { background: var(--ink); color: var(--screen); }
+.btn-primary kbd { background: transparent; color: inherit; border-color: currentColor; opacity: 0.8; }
+.btn-secondary { border: 1px solid var(--line); background: var(--screen); color: var(--ink); }
+.btn-secondary:hover:not(:disabled) { background: var(--track); }
+.btn-ghost { height: 36px; padding-inline: 12px; border: 1px solid transparent; background: transparent; color: var(--ink-2); font-size: 14px; }
+.btn-ghost:hover:not(:disabled) { background: var(--track); color: var(--ink); }
+.controls .btn-primary { height: 64px; min-width: 140px; border-radius: 12px; font-size: 16px; }
+
+.toast {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 6;
+  max-width: calc(100% - 32px); padding: 8px 14px; border-radius: 10px;
+  background: var(--ink); color: var(--screen); box-shadow: var(--shadow);
+  font-size: 13.5px; text-align: center;
+}
+
+/* ---------- results ---------- */
+.results { display: grid; gap: 18px; outline: none; }
+.res-head { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
+.grade {
+  width: 78px; height: 78px; flex: none; display: grid; place-items: center;
+  border-radius: 16px; border: 2.5px solid var(--line);
+  font: 700 46px/1 var(--font-display);
+}
+.results[data-state="pass"] .grade { border-color: var(--j-good); }
+.results[data-state="fail"] .grade { border-color: var(--j-ok); }
+.res-main { flex: 1 1 260px; min-width: 0; display: grid; gap: 2px; }
+.res-verdict { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.res-verdict::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--staff); }
+.results[data-state="pass"] .res-verdict::before { background: var(--j-good); }
+.results[data-state="fail"] .res-verdict::before { background: var(--j-ok); }
+.res-acc { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; color: var(--ink-2); font-size: 14px; }
+.res-acc strong { font-size: 36px; font-weight: 700; line-height: 1.1; color: var(--ink); }
+.res-meta { margin: 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.res-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.res-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 12px 16px; margin: 0; padding: 12px 0; border-block: 1px solid var(--line); }
+.res-stats > div { display: grid; gap: 1px; min-width: 0; }
+.res-stats dt { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.res-stats dd { margin: 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot.ring { background: transparent; border: 1.6px solid var(--j-miss); }
+.chart-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.chart-head h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: var(--ink-2); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.legend .ln { width: 14px; height: 2px; border-radius: 1px; background: var(--ink-2); }
+.legend .sw { width: 12px; height: 10px; border-radius: 2px; background: var(--track-2); }
+.res-chart { display: grid; gap: 8px; }
+.chart-box { position: relative; height: 210px; }
+#resChart { display: block; width: 100%; height: 100%; border-radius: 6px; }
+.tip {
+  position: absolute; z-index: 3; pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+  padding: 6px 10px; border-radius: 8px;
+  background: var(--ink); color: var(--screen);
+  font-size: 12px; line-height: 1.35; white-space: nowrap; box-shadow: var(--shadow);
+}
+.tip strong { display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
+.res-bars { display: grid; gap: 7px; }
+.res-tips { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 75ch; color: var(--ink-2); font-size: 14px; }
+.res-table summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.res-table[open] summary { margin-bottom: 8px; }
+
+/* ---------- beat analysis ---------- */
+.song {
+  grid-area: song; min-width: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 16px 18px 18px; display: grid; gap: 16px;
+}
+.song-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+.song-intro { flex: 1 1 300px; min-width: 0; display: grid; gap: 4px; }
+.song h2 { margin: 0; font: 600 17px var(--font-display); }
+.song-intro p { margin: 0; font-size: 13.5px; color: var(--ink-2); max-width: 62ch; }
+.drop {
+  flex: 0 1 290px; min-width: 0; display: grid; justify-items: center; gap: 2px;
+  padding: 14px 16px; border: 1.5px dashed var(--staff); border-radius: 12px; background: var(--screen);
+  text-align: center; cursor: pointer; transition: border-color 120ms linear, background-color 120ms linear;
+}
+.drop:hover, .drop.drag { border-color: var(--accent); background: var(--accent-wash); }
+.drop:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.drop.busy { opacity: 0.55; pointer-events: none; }
+.drop-main { font-weight: 600; color: var(--accent); }
+.drop-sub { font-size: 12px; color: var(--muted); }
+.song-status { display: grid; gap: 6px; font-size: 13.5px; color: var(--ink-2); }
+.song-status.err { color: var(--jt-miss); }
+.sp-track { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.sp-track i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--accent); transition: width 120ms linear; }
+.song-status.err .sp-track { display: none; }
+.song-body { display: grid; gap: 16px; }
+.song-summary { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px 30px; }
+.song-tempo { display: grid; gap: 1px; }
+.song-facts { flex: 1 1 340px; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 10px 16px; margin: 0; }
+.song-facts > div { min-width: 0; display: grid; gap: 1px; }
+.song-facts dt { font-size: 12px; color: var(--muted); }
+.song-facts dd { margin: 0; display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.song-facts dd.name { display: block; font-weight: 500; font-size: 14px; overflow-wrap: anywhere; }
+.alts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; color: var(--ink-2); }
+.alt-chip {
+  height: 30px; padding-inline: 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--screen); color: var(--ink-2);
+  font: 600 13px var(--font-body); font-variant-numeric: tabular-nums;
+}
+.alt-chip:hover:not(:disabled) { border-color: var(--staff); color: var(--ink); }
+.alt-chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--screen); }
+.view-block { display: grid; gap: 8px; }
+.wave-box, .detail-box { position: relative; border: 1px solid var(--line); border-radius: 10px; background: var(--screen); overflow: hidden; }
+.wave-box { height: 104px; }
+.detail-box { height: 96px; }
+.wave-box canvas, .detail-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#waveCv { cursor: pointer; touch-action: manipulation; }
+.song-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.song-time { font: 500 13px var(--font-data); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.inline-field { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.inline-field input[type="range"] { width: 120px; }
+.db-btn { width: 34px; height: 32px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--screen); color: var(--ink-2); font-size: 13px; }
+.db-btn:hover:not(:disabled) { background: var(--track); color: var(--ink); }
+.tempo-box { position: relative; height: 128px; }
+#tempoCv { display: block; width: 100%; height: 100%; }
+.song-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ---------- settings rack ---------- */
+.panel { grid-area: panel; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.panel form { display: grid; gap: 16px; }
+.panel-title { margin: 0; font: 600 17px var(--font-display); }
+.panel fieldset, .panel .group { min-width: 0; margin: 0; padding: 16px 0 0; border: 0; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.panel fieldset:disabled { opacity: 0.55; }
+.sec-title { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.field { display: grid; gap: 7px; min-width: 0; }
+.field-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
+.field-head .val { font: 600 12.5px var(--font-data); color: var(--ink); }
+.hint { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); overflow-wrap: anywhere; }
+.hint.ok { color: var(--jt-good); }
+.hint.warn { color: var(--jt-ok); }
+.num-wrap { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.num-in {
+  width: 66px; height: 32px; padding: 0 6px; text-align: center;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--screen);
+  font: 600 15px var(--font-display);
+}
+input[type="range"] { width: 100%; height: 22px; margin: 0; accent-color: var(--accent); }
+.tempo-scale { position: relative; height: 16px; font-size: 10.5px; font-style: italic; color: var(--muted); }
+.tempo-scale span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+select {
+  width: 100%; height: 38px; padding-inline: 10px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--screen);
+  font-size: 14px;
+}
+.check { display: flex; align-items: center; gap: 9px; font-size: 14px; color: var(--ink); cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); flex: none; }
+.seg-ctl { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--track); }
+.seg-ctl label { position: relative; flex: 1 1 0; min-width: 0; }
+.seg-ctl input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.seg-ctl .pill {
+  display: flex; align-items: center; justify-content: center; height: 32px;
+  border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap; pointer-events: none;
+}
+.seg-ctl .pill svg { width: 28px; height: 22px; fill: currentColor; }
+.seg-ctl input:checked + .pill { background: var(--screen); color: var(--ink); box-shadow: 0 0 0 1px var(--line), var(--shadow-sm); }
+.seg-ctl input:focus-visible + .pill { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg-ctl input:disabled { cursor: not-allowed; }
+.seg-ctl input:disabled + .pill { opacity: 0.45; }
+
+/* ---------- practice log ---------- */
+.log { grid-area: log; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; }
+.log-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.log h2 { margin: 0; font: 600 17px var(--font-display); }
+.log-note { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.log-empty { margin: 0; padding: 18px 0 6px; font-size: 14px; color: var(--muted); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th {
+  padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.src { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; }
+.acc-cell { display: inline-flex; align-items: center; gap: 8px; }
+.mini { display: inline-block; width: 56px; height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.mini i { display: block; height: 100%; background: var(--j-ok); }
+.mini.pass i { background: var(--j-good); }
+.chip { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-2); }
+.chip b { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; border: 1.5px solid var(--line); font: 700 13px var(--font-display); color: var(--ink); }
+.chip.pass b { border-color: var(--j-good); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "stage" "song" "panel" "log"; grid-template-rows: none; }
+}
+@media (max-width: 640px) {
+  .app { padding-inline: 16px; padding-block: 16px 36px; gap: 14px; }
+  .layout { gap: 14px; }
+  .brand h1 { font-size: 27px; }
+  .stage { padding: 14px 12px 14px; gap: 12px; }
+  .song { padding: 14px 12px 16px; }
+  .bars { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .lane-wrap { height: 160px; }
+  .bpm-num { font-size: 38px; }
+  .scoreboard { gap: 16px; }
+  .scoreboard dd { font-size: 19px; }
+  .controls .btn-primary { min-width: 110px; padding-inline: 14px; }
+  .tap-pad { height: 72px; }
+  .controls .btn-primary { height: 72px; }
+  .meter-row .side { display: none; }
+  .meter-row { grid-template-columns: minmax(0, 1fr); }
+  .keys { display: none; }
+  .drop { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .led, .tap-pad, .tb-fill, .sp-track i { transition: none; }
+  .led.flash { transform: none; }
+  .countdown.pop span { animation: none; }
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="masthead">
+    <div class="brand">
+      <h1>Nhịp Chuẩn</h1>
+      <p>Luyện giữ nhịp cùng metronome hoặc theo chính bài hát của bạn. Gõ phím <kbd>Space</kbd> đúng lúc nốt chạm vạch đích.</p>
+    </div>
+    <ul class="keys" aria-label="Phím tắt">
+      <li><kbd>Space</kbd> gõ nhịp, bắt đầu</li>
+      <li><kbd>Esc</kbd> dừng</li>
+      <li><kbd>↑</kbd><kbd>↓</kbd> đổi tempo</li>
+    </ul>
+  </header>
+
+  <main class="layout">
+    <section class="stage" id="stage" aria-label="Màn luyện nhịp">
+      <div class="readout">
+        <div class="tempo">
+          <svg class="pendulum" viewBox="0 0 32 44" aria-hidden="true">
+            <path class="pd-body" d="M6.5 42.5h19L20.4 3.5h-8.8z"/>
+            <path class="pd-scale" d="M13.2 9h5.6M12.8 13h6.4M12.4 17h7.2M12 21h8M11.6 25h8.8M11.2 29h9.6"/>
+            <g id="pdArm"><path class="pd-rod" d="M16 38V4"/><rect class="pd-weight" id="pdWeight" x="12.8" y="12" width="6.4" height="5" rx="1.2"/></g>
+            <circle class="pd-pivot" cx="16" cy="38" r="2"/>
+          </svg>
+          <div class="bpm-block">
+            <div class="bpm-line"><span class="bpm-num" id="bpmNum">90</span><span class="bpm-unit">BPM</span></div>
+            <div class="tempo-name"><em id="tempoName">Andante</em><span id="meterLabel">4/4 · nốt đen</span></div>
+          </div>
+          <div class="bpm-steps">
+            <button type="button" class="step-btn" id="bpmUp" aria-label="Tăng 1 BPM">+</button>
+            <button type="button" class="step-btn" id="bpmDown" aria-label="Giảm 1 BPM">−</button>
+          </div>
+        </div>
+        <div class="leds" id="leds" aria-hidden="true"></div>
+        <dl class="scoreboard">
+          <div><dt>Điểm</dt><dd id="score">0</dd></div>
+          <div><dt>Combo</dt><dd id="combo">0</dd></div>
+          <div><dt>Chính xác</dt><dd id="acc">—</dd></div>
+        </dl>
+      </div>
+
+      <div class="lane-wrap" id="laneWrap">
+        <canvas id="lane" role="img" aria-label="Khuông nhạc một dòng: nốt chạy từ phải sang trái, gõ khi nốt chạm vạch đích"></canvas>
+        <div class="lane-hint" id="laneHint"><kbd>Space</kbd> hoặc chạm Gõ để bắt đầu</div>
+        <div class="calib" id="calib" hidden>
+          <h3>Đo độ trễ</h3>
+          <p>Nghe 4 tiếng đếm vào, rồi gõ Space (hoặc chạm Gõ) trùng với từng tiếng click. Nên nhắm mắt và chỉ nghe.</p>
+          <p class="calib-stat"><span class="big" id="calibCount">0</span> / 24 lần gõ · trung vị <strong id="calibMed">—</strong></p>
+        </div>
+        <div class="countdown" id="countdown" hidden><span id="countNum">1</span><small>Đếm vào</small></div>
+      </div>
+
+      <div class="meter-block">
+        <div class="row-head">
+          <span class="row-title">Độ lệch so với phách</span>
+          <span class="row-vals">Lần cuối <strong id="lastOff">—</strong> · TB 12 nốt <strong id="avgOff">—</strong></span>
+        </div>
+        <div class="meter-row">
+          <span class="side">Sớm</span>
+          <canvas id="meter" role="img" aria-label="Thanh độ lệch: giữa là đúng phách, bên trái là gõ sớm, bên phải là gõ muộn"></canvas>
+          <span class="side">Muộn</span>
+        </div>
+      </div>
+
+      <div class="bars">
+        <div class="bar-block">
+          <div class="row-head"><span class="row-title">Tiến trình</span><span class="row-vals" id="progLabel">16 ô</span></div>
+          <div class="progress" id="progress" aria-hidden="true"></div>
+        </div>
+        <div class="bar-block">
+          <div class="row-head"><span class="row-title">Độ chính xác</span><span class="row-vals" id="accLabel">— · mục tiêu 85%</span></div>
+          <div class="target-bar" id="targetBar"><div class="tb-fill" id="accFill"></div><div class="tb-mark" id="targetMark" title="Mục tiêu"></div></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button type="button" class="tap-pad" id="tapPad" aria-label="Gõ nhịp, tương đương phím Space"><span>Gõ</span><kbd>Space</kbd></button>
+        <button type="button" class="btn-primary" id="startBtn">Bắt đầu</button>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+      <section class="results" id="results" hidden tabindex="-1" aria-labelledby="resVerdict">
+        <div class="res-head">
+          <div class="grade" id="resGrade">A</div>
+          <div class="res-main">
+            <p class="res-verdict" id="resVerdict">Đạt mục tiêu</p>
+            <p class="res-acc"><strong id="resAcc">0%</strong><span>độ chính xác · mục tiêu <span id="resTarget">85%</span></span></p>
+            <p class="res-meta" id="resMeta"></p>
+          </div>
+          <div class="res-actions">
+            <button type="button" class="btn-primary" id="againBtn">Chơi lại <kbd>Space</kbd></button>
+            <button type="button" class="btn-secondary" id="nextBtn">Thử 95 BPM</button>
+            <button type="button" class="btn-ghost" id="closeRes">Đóng</button>
+          </div>
+        </div>
+        <dl class="res-stats" id="resStats"></dl>
+        <div class="res-chart">
+          <div class="chart-head"><h3>Độ lệch từng nốt (ms)</h3><ul class="legend" id="resLegend"></ul></div>
+          <div class="chart-box">
+            <canvas id="resChart" tabindex="0" role="img" aria-label="Biểu đồ độ lệch từng nốt theo thời gian. Dùng phím mũi tên trái phải để xem từng nốt."></canvas>
+            <div class="tip" id="resTip" hidden></div>
+          </div>
+        </div>
+        <div class="res-bars">
+          <div class="row-head"><span class="row-title">Từng ô nhịp</span><span class="row-vals" id="resBarsNote"></span></div>
+          <div class="progress" id="resBars"></div>
+        </div>
+        <ul class="res-tips" id="resTips"></ul>
+        <details class="res-table"><summary>Xem dạng bảng theo ô nhịp</summary><div class="table-wrap"><table id="resTable"></table></div></details>
+      </section>
+    </section>
+
+    <section class="song" id="songSec" aria-labelledby="songTitle">
+      <div class="song-top">
+        <div class="song-intro">
+          <h2 id="songTitle">Phân tích beat</h2>
+          <p>Tải một bài hát lên để tìm tempo và vị trí từng beat, nghe thử kèm tiếng click, rồi luyện gõ theo chính bài đó. File được xử lý ngay trong trình duyệt của bạn, không gửi đi đâu.</p>
+        </div>
+        <label class="drop" id="songDrop">
+          <input type="file" id="songFile" class="sr-only" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.oga,.opus,.flac,.webm,.mp4">
+          <span class="drop-main">Chọn file nhạc</span>
+          <span class="drop-sub">hoặc kéo thả vào đây · MP3, WAV, M4A, OGG, FLAC</span>
+        </label>
+      </div>
+      <div class="song-status" id="songStatus" role="status" aria-live="polite" hidden>
+        <div class="sp-track"><i id="songProg"></i></div>
+        <span id="songStatusText">Đang đọc file…</span>
+      </div>
+      <div class="song-body" id="songBody" hidden>
+        <div class="song-summary">
+          <div class="song-tempo">
+            <div class="bpm-line"><span class="bpm-num" id="songBpmVal">120</span><span class="bpm-unit">BPM</span></div>
+            <div class="tempo-name"><em id="songTempoName">Allegro</em><span id="songBpmPrecise">120 BPM</span></div>
+          </div>
+          <dl class="song-facts">
+            <div><dt>Bài</dt><dd class="name" id="songName">—</dd></div>
+            <div><dt>Thời lượng</dt><dd id="songDur">—</dd></div>
+            <div><dt>Số beat</dt><dd id="songBeats">—</dd></div>
+            <div><dt>Độ rõ nhịp</dt><dd id="songConf">—</dd></div>
+            <div><dt>Độ đều</dt><dd id="songStab">—</dd></div>
+          </dl>
+        </div>
+        <div class="alts"><span>Nghe thấy nhanh hoặc chậm gấp đôi? Chọn tempo khác:</span><span id="songAlts" class="alts"></span></div>
+        <div class="view-block">
+          <div class="row-head"><span class="row-title">Sóng âm và beat</span><span class="row-vals" id="songStartLbl"></span></div>
+          <div class="wave-box"><canvas id="waveCv" tabindex="0" role="img" aria-label="Sóng âm của bài. Bấm để chọn chỗ bắt đầu luyện, hoặc dùng phím mũi tên trái phải để dời từng ô nhịp."></canvas></div>
+          <div class="detail-box"><canvas id="detailCv" role="img" aria-label="Phóng to quanh vị trí đang nghe: đường độ mạnh âm bật lên và vạch beat"></canvas></div>
+          <p class="hint">Bấm vào sóng âm để chọn chỗ bắt đầu luyện. Vạch nhỏ trên cùng là phách 1 của mỗi ô, vùng tô màu là đoạn sẽ được chấm. Khung dưới phóng to quanh chỗ đang nghe: vạch beat nên trùng các đỉnh âm.</p>
+        </div>
+        <div class="song-controls">
+          <button type="button" class="btn-secondary" id="songPlayBtn">Nghe thử</button>
+          <span class="song-time" id="songTime">0:00 / 0:00</span>
+          <label class="check"><input type="checkbox" id="songClickIn"> Kèm click theo beat</label>
+          <label class="inline-field" for="songVolIn">Âm lượng bài <input type="range" id="songVolIn" min="0" max="100" step="1"></label>
+          <span class="inline-field">Phách 1
+            <button type="button" class="db-btn" id="dbPrev" aria-label="Dời phách 1 sớm hơn một phách">◀</button>
+            <button type="button" class="db-btn" id="dbNext" aria-label="Dời phách 1 muộn hơn một phách">▶</button>
+          </span>
+        </div>
+        <div class="view-block">
+          <div class="row-head"><span class="row-title">Tempo theo thời gian</span><span class="row-vals" id="tempoNote"></span></div>
+          <div class="tempo-box"><canvas id="tempoCv" tabindex="0" role="img" aria-label="Biểu đồ tempo từng beat theo thời gian"></canvas><div class="tip" id="tempoTip" hidden></div></div>
+        </div>
+        <div class="song-actions">
+          <button type="button" class="btn-primary" id="songPracticeBtn">Gõ theo bài này</button>
+          <button type="button" class="btn-secondary" id="songUseBpmBtn">Dùng 120 BPM cho metronome</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel" aria-labelledby="panelTitle">
+      <form id="settings" autocomplete="off">
+        <h2 class="panel-title" id="panelTitle">Thiết lập</h2>
+
+        <fieldset id="fsSource">
+          <div class="sec-title">Nguồn nhịp</div>
+          <div class="seg-ctl" role="radiogroup" aria-label="Nguồn nhịp">
+            <label><input type="radio" name="source" id="src-metro" value="metro"><span class="pill">Metronome</span></label>
+            <label><input type="radio" name="source" id="src-song" value="song"><span class="pill">Bài hát</span></label>
+          </div>
+          <p class="hint" id="sourceNote">Tải một bài ở mục Phân tích beat để gõ theo nhạc.</p>
+        </fieldset>
+
+        <fieldset id="fsTempo">
+          <div class="sec-title">Nhịp độ</div>
+          <div class="field">
+            <div class="field-head">
+              <label for="bpmRange">Tempo</label>
+              <span class="num-wrap"><input class="num-in" type="number" id="bpmNumIn" name="bpmNum" min="30" max="260" step="1" inputmode="numeric" aria-label="Tempo (BPM)">BPM</span>
+            </div>
+            <input type="range" id="bpmRange" name="bpmRange" min="30" max="260" step="1">
+            <div class="tempo-scale" aria-hidden="true">
+              <span style="left:8.7%">Largo</span><span style="left:27%">Andante</span><span style="left:49.6%">Allegro</span><span style="left:67%">Presto</span><span style="left:85%">Prestissimo</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset id="fsMeter">
+          <div class="sec-title">Nhịp và chia phách</div>
+          <div class="field">
+            <div class="field-head"><span id="beatsLbl">Số phách mỗi ô</span></div>
+            <div class="seg-ctl" role="radiogroup" aria-labelledby="beatsLbl">
+              <label><input type="radio" name="beats" id="beats-2" value="2"><span class="pill">2/4</span></label>
+              <label><input type="radio" name="beats" id="beats-3" value="3"><span class="pill">3/4</span></label>
+              <label><input type="radio" name="beats" id="beats-4" value="4"><span class="pill">4/4</span></label>
+              <label><input type="radio" name="beats" id="beats-5" value="5"><span class="pill">5/4</span></label>
+              <label><input type="radio" name="beats" id="beats-6" value="6"><span class="pill">6/4</span></label>
+              <label><input type="radio" name="beats" id="beats-7" value="7"><span class="pill">7/4</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-head"><span id="subLbl">Gõ theo</span><span class="val" id="subVal">nốt đen</span></div>
+            <div class="seg-ctl" role="radiogroup" aria-labelledby="subLbl">
+              <label title="Nốt đen: 1 lần mỗi phách"><input type="radio" name="sub" id="sub-1" value="1" aria-label="Nốt đen, 1 lần mỗi phách"><span class="pill"><svg viewBox="0 0 28 24" aria-hidden="true"><ellipse cx="11.5" cy="18.4" rx="4.4" ry="3.1" transform="rotate(-20 11.5 18.4)"/><rect x="15" y="3" width="1.6" height="15.4"/></svg></span></label>
+              <label title="Móc đơn: 2 lần mỗi phách"><input type="radio" name="sub" id="sub-2" value="2" aria-label="Móc đơn, 2 lần mỗi phách"><span class="pill"><svg viewBox="0 0 28 24" aria-hidden="true"><ellipse cx="6.5" cy="18.4" rx="4" ry="2.9" transform="rotate(-20 6.5 18.4)"/><ellipse cx="20" cy="18.4" rx="4" ry="2.9" transform="rotate(-20 20 18.4)"/><rect x="9.6" y="4" width="1.5" height="14.4"/><rect x="23.1" y="4" width="1.5" height="14.4"/><rect x="9.6" y="3.2" width="15" height="3"/></svg></span></label>
+              <label title="Liên ba: 3 lần mỗi phách"><input type="radio" name="sub" id="sub-3" value="3" aria-label="Liên ba, 3 lần mỗi phách"><span class="pill"><svg viewBox="0 0 30 24" aria-hidden="true"><ellipse cx="4.6" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 4.6 18.6)"/><ellipse cx="14" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 14 18.6)"/><ellipse cx="23.4" cy="18.6" rx="3.4" ry="2.5" transform="rotate(-20 23.4 18.6)"/><rect x="7.2" y="8" width="1.4" height="10.6"/><rect x="16.6" y="8" width="1.4" height="10.6"/><rect x="26" y="8" width="1.4" height="10.6"/><rect x="7.2" y="7.2" width="20.2" height="2.6"/><text x="17.3" y="5.6" font-size="6.5" font-style="italic" font-weight="700" text-anchor="middle">3</text></svg></span></label>
+              <label title="Móc kép: 4 lần mỗi phách"><input type="radio" name="sub" id="sub-4" value="4" aria-label="Móc kép, 4 lần mỗi phách"><span class="pill"><svg viewBox="0 0 30 24" aria-hidden="true"><ellipse cx="3.8" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 3.8 18.8)"/><ellipse cx="11.2" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 11.2 18.8)"/><ellipse cx="18.6" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 18.6 18.8)"/><ellipse cx="26" cy="18.8" rx="3" ry="2.2" transform="rotate(-20 26 18.8)"/><rect x="6.1" y="4" width="1.3" height="14.6"/><rect x="13.5" y="4" width="1.3" height="14.6"/><rect x="20.9" y="4" width="1.3" height="14.6"/><rect x="28.3" y="4" width="1.3" height="14.6"/><rect x="6.1" y="3.4" width="23.5" height="2.4"/><rect x="6.1" y="7.2" width="23.5" height="2.4"/></svg></span></label>
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="accentIn" name="accent"> Nhấn mạnh phách đầu ô nhịp</label>
+        </fieldset>
+
+        <fieldset id="fsExercise">
+          <div class="sec-title">Bài tập</div>
+          <div class="field">
+            <div class="field-head"><span id="lenLbl">Độ dài</span></div>
+            <div class="seg-ctl" role="radiogroup" aria-labelledby="lenLbl">
+              <label><input type="radio" name="length" id="len-8" value="8"><span class="pill">8 ô</span></label>
+              <label><input type="radio" name="length" id="len-16" value="16"><span class="pill">16 ô</span></label>
+              <label><input type="radio" name="length" id="len-32" value="32"><span class="pill">32 ô</span></label>
+              <label><input type="radio" name="length" id="len-64" value="64"><span class="pill">64 ô</span></label>
+              <label title="Không giới hạn (với bài hát: đến hết bài), bấm Dừng để xem kết quả"><input type="radio" name="length" id="len-0" value="0" aria-label="Không giới hạn"><span class="pill">∞</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="targetIn">Mục tiêu độ chính xác</label><span class="val" id="targetVal">85%</span></div>
+            <input type="range" id="targetIn" name="target" min="50" max="100" step="5">
+          </div>
+          <div class="field">
+            <div class="field-head"><span id="diffLbl">Độ khó (cửa sổ chấm)</span></div>
+            <div class="seg-ctl" role="radiogroup" aria-labelledby="diffLbl">
+              <label><input type="radio" name="diff" id="diff-easy" value="easy"><span class="pill">Dễ</span></label>
+              <label><input type="radio" name="diff" id="diff-normal" value="normal"><span class="pill">Vừa</span></label>
+              <label><input type="radio" name="diff" id="diff-hard" value="hard"><span class="pill">Khó</span></label>
+            </div>
+            <p class="hint" id="diffNote"></p>
+          </div>
+          <div class="field">
+            <label class="field-head" for="gapIn">Click ngắt quãng</label>
+            <select id="gapIn" name="gap">
+              <option value="off">Tắt, click kêu mọi ô</option>
+              <option value="3-1">3 ô có click, 1 ô im</option>
+              <option value="2-2">2 ô có click, 2 ô im</option>
+              <option value="1-1">1 ô có click, 1 ô im</option>
+              <option value="4-4">4 ô có click, 4 ô im</option>
+              <option value="1-3">1 ô có click, 3 ô im</option>
+            </select>
+            <p class="hint">Ô im không có tiếng click và nốt bị ẩn. Bạn vẫn gõ đều để luyện nhịp trong đầu.</p>
+          </div>
+          <div class="field">
+            <label class="field-head" for="rampIn">Tăng tốc dần</label>
+            <select id="rampIn" name="ramp">
+              <option value="off">Tắt</option>
+              <option value="2-4">+2 BPM sau mỗi 4 ô</option>
+              <option value="5-4">+5 BPM sau mỗi 4 ô</option>
+              <option value="5-8">+5 BPM sau mỗi 8 ô</option>
+              <option value="10-8">+10 BPM sau mỗi 8 ô</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset id="fsSound">
+          <div class="sec-title">Âm thanh</div>
+          <div class="field">
+            <div class="field-head"><span id="soundLbl">Tiếng click</span></div>
+            <div class="seg-ctl" role="radiogroup" aria-labelledby="soundLbl">
+              <label><input type="radio" name="sound" id="sound-wood" value="wood"><span class="pill">Mõ gỗ</span></label>
+              <label><input type="radio" name="sound" id="sound-click" value="click"><span class="pill">Click</span></label>
+              <label><input type="radio" name="sound" id="sound-beep" value="beep"><span class="pill">Bíp</span></label>
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="subClickIn" name="subClick"> Kêu cả các nốt chia phách</label>
+        </fieldset>
+
+        <div class="group">
+          <div class="field">
+            <div class="field-head"><label for="volumeIn">Âm lượng click</label><span class="val" id="volVal">80%</span></div>
+            <input type="range" id="volumeIn" name="volume" min="0" max="100" step="1">
+          </div>
+        </div>
+
+        <fieldset id="fsLatency">
+          <div class="sec-title">Độ trễ</div>
+          <div class="field">
+            <div class="field-head"><label for="latencyIn">Bù trễ</label><span class="val" id="latVal">±0 ms</span></div>
+            <input type="range" id="latencyIn" name="latency" min="-150" max="350" step="1">
+            <p class="hint">Nếu bạn gõ trùng tiếng click mà vẫn bị báo muộn (hay gặp với tai nghe Bluetooth), hãy đo độ trễ một lần. Trên iPhone, tắt chế độ im lặng để nghe tiếng click.</p>
+          </div>
+          <button type="button" class="btn-secondary" id="calibBtn">Đo độ trễ</button>
+          <p class="hint" id="calibMsg" hidden></p>
+        </fieldset>
+      </form>
+    </aside>
+
+    <section class="log" aria-labelledby="logTitle">
+      <div class="log-head">
+        <h2 id="logTitle">Nhật ký luyện tập</h2>
+        <button type="button" class="btn-ghost" id="clearLog" hidden>Xoá nhật ký</button>
+      </div>
+      <p class="log-note" id="logNote">Kết quả mỗi bài được lưu trên trình duyệt này để bạn theo dõi tiến bộ.</p>
+      <p class="log-empty" id="logEmpty">Chưa có lượt nào. Hoàn thành một bài để thấy điểm, độ chính xác và độ lệch trung bình ở đây.</p>
+      <div class="table-wrap">
+        <table id="logTable" hidden>
+          <thead>
+            <tr><th>Thời điểm</th><th>Nguồn</th><th class="num">Tempo</th><th>Nhịp</th><th>Gõ theo</th><th class="num">Ô nhịp</th><th>Độ khó</th><th class="num">Chính xác</th><th>Hạng</th><th class="num">Lệch TB</th></tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="sr-only" id="announcer" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* =============================== Beat analyser ===============================
+     Self-contained (no outer references) so it can be stringified into a Worker. */
+  function makeBeatAnalyzer() {
+    'use strict';
+    function makeFFT(n) {
+      const levels = Math.round(Math.log2(n));
+      const cos = new Float64Array(n / 2), sin = new Float64Array(n / 2);
+      for (let i = 0; i < n / 2; i++) { cos[i] = Math.cos((2 * Math.PI * i) / n); sin[i] = Math.sin((2 * Math.PI * i) / n); }
+      const rev = new Uint32Array(n);
+      for (let i = 0; i < n; i++) { let x = i, r = 0; for (let b = 0; b < levels; b++) { r = (r << 1) | (x & 1); x >>= 1; } rev[i] = r; }
+      return function fft(re, im) {
+        for (let i = 0; i < n; i++) {
+          const j = rev[i];
+          if (j > i) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+        }
+        for (let size = 2; size <= n; size <<= 1) {
+          const half = size >> 1, step = n / size;
+          for (let i = 0; i < n; i += size) {
+            for (let j = i, k = 0; j < i + half; j++, k += step) {
+              const l = j + half;
+              const tre = re[l] * cos[k] + im[l] * sin[k];
+              const tim = im[l] * cos[k] - re[l] * sin[k];
+              re[l] = re[j] - tre; im[l] = im[j] - tim;
+              re[j] += tre; im[j] += tim;
+            }
+          }
+        }
+      };
+    }
+    function median(a) {
+      if (!a.length) return 0;
+      const b = Array.from(a).sort((x, y) => x - y), n = b.length;
+      return n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2;
+    }
+    function stdev(a) {
+      const n = a.length; if (n < 2) return 0;
+      let m = 0; for (let i = 0; i < n; i++) m += a[i]; m /= n;
+      let v = 0; for (let i = 0; i < n; i++) v += (a[i] - m) * (a[i] - m);
+      return Math.sqrt(v / (n - 1));
+    }
+    function movingAverage(x, w) {
+      const n = x.length, out = new Float32Array(n), h = Math.floor(w / 2);
+      const ps = new Float64Array(n + 1);
+      for (let i = 0; i < n; i++) ps[i + 1] = ps[i] + x[i];
+      for (let i = 0; i < n; i++) { const a = Math.max(0, i - h), b = Math.min(n, i + h + 1); out[i] = (ps[b] - ps[a]) / (b - a); }
+      return out;
+    }
+    /* Waveform overview: min/max per bin, normalised to the loudest peak. */
+    function wavePeaks(y, bins) {
+      const mn = new Float32Array(bins), mx = new Float32Array(bins);
+      const per = y.length / bins;
+      let top = 1e-9;
+      for (let b = 0; b < bins; b++) {
+        const a = Math.floor(b * per), e = Math.min(y.length, Math.max(a + 1, Math.floor((b + 1) * per)));
+        let lo = 0, hi = 0;
+        for (let i = a; i < e; i++) { const v = y[i]; if (v < lo) lo = v; else if (v > hi) hi = v; }
+        mn[b] = lo; mx[b] = hi;
+        if (hi > top) top = hi;
+        if (-lo > top) top = -lo;
+      }
+      for (let b = 0; b < bins; b++) { mn[b] /= top; mx[b] /= top; }
+      return { min: mn, max: mx };
+    }
+    /* Spectral flux over quarter-octave bands (log-compressed), ~100 frames/s,
+       centred frames so frame t sits at time t*hop/sr. */
+    function onsetEnvelope(y, sr, progress) {
+      const N = sr > 30000 ? 1024 : 512;
+      const hop = Math.max(1, Math.round(sr / 100));
+      const fr = sr / hop;
+      const nFrames = Math.floor(y.length / hop) + 1;
+      let ss = 0, cnt = 0;
+      for (let i = 0; i < y.length; i += 3) { ss += y[i] * y[i]; cnt++; }
+      const gain = 0.1 / (Math.sqrt(ss / Math.max(1, cnt)) || 1e-9);
+      const win = new Float64Array(N);
+      for (let i = 0; i < N; i++) win[i] = (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N)) * gain;
+      const fft = makeFFT(N);
+      const re = new Float64Array(N), im = new Float64Array(N);
+      const half = N / 2, binHz = sr / N;
+      const bandOf = new Int32Array(half + 1).fill(-1);
+      const seen = new Map();
+      let B = 0, nLow = 0;
+      for (let k = 1; k <= half; k++) {
+        const f = k * binHz;
+        if (f < 30 || f > 12000) continue;
+        const rb = Math.floor(4 * Math.log2(f / 30));
+        if (!seen.has(rb)) { seen.set(rb, B); if (30 * Math.pow(2, (rb + 1) / 4) <= 180) nLow = B + 1; B++; }
+        bandOf[k] = seen.get(rb);
+      }
+      const count = new Float64Array(B);
+      for (let k = 1; k <= half; k++) if (bandOf[k] >= 0) count[bandOf[k]]++;
+      let prev = new Float64Array(B), cur = new Float64Array(B);
+      const flux = new Float32Array(nFrames), fluxLow = new Float32Array(nFrames);
+      for (let t = 0; t < nFrames; t++) {
+        const c = t * hop - half;
+        for (let n = 0; n < N; n++) { const idx = c + n; re[n] = idx >= 0 && idx < y.length ? y[idx] * win[n] : 0; im[n] = 0; }
+        fft(re, im);
+        cur.fill(0);
+        for (let k = 1; k <= half; k++) { const b = bandOf[k]; if (b >= 0) cur[b] += Math.sqrt(re[k] * re[k] + im[k] * im[k]); }
+        for (let b = 0; b < B; b++) cur[b] = Math.log1p((10 * cur[b]) / count[b]);
+        if (t > 0) {
+          let s = 0, sl = 0;
+          for (let b = 0; b < B; b++) {
+            let pm = prev[b];
+            if (b > 0 && prev[b - 1] > pm) pm = prev[b - 1];
+            if (b < B - 1 && prev[b + 1] > pm) pm = prev[b + 1];
+            const d = cur[b] - pm;
+            if (d > 0) { s += d; if (b < nLow) sl += d; }
+          }
+          flux[t] = s / B;
+          fluxLow[t] = nLow ? sl / nLow : 0;
+        }
+        const sw = prev; prev = cur; cur = sw;
+        if (progress && t % 1500 === 0) progress(0.05 + (0.75 * t) / nFrames);
+      }
+      return { flux, fluxLow, fr, hop };
+    }
+    /* env: lightly smoothed flux, for beat placement.
+       det: flux minus an 8 s running mean, for tempo (robust to loudness changes). */
+    function prepare(flux, fr) {
+      const n = flux.length;
+      const sm = new Float32Array(n);
+      for (let i = 0; i < n; i++) sm[i] = 0.25 * (i > 0 ? flux[i - 1] : flux[i]) + 0.5 * flux[i] + 0.25 * (i < n - 1 ? flux[i + 1] : flux[i]);
+      const lm = movingAverage(flux, Math.round(fr * 8) | 1);
+      const det = new Float32Array(n);
+      for (let i = 0; i < n; i++) det[i] = flux[i] - lm[i];
+      return { det, env: sm };
+    }
+    /* Tempo: mean of Hann-windowed, normalised autocorrelations over 10 s windows
+       (a mean tempogram), weighted by a log-normal prior centred on 110 BPM. */
+    function estimateTempo(e, fr) {
+      const n = e.length;
+      const lagMin = Math.max(2, Math.floor((60 * fr) / 240));
+      const lagMax = Math.ceil((60 * fr) / 40);
+      const W = Math.min(n, Math.round(fr * 10)), H = Math.max(1, Math.round(fr * 2));
+      const hw = new Float64Array(W);
+      for (let i = 0; i < W; i++) hw[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / W);
+      const acf = new Float64Array(lagMax + 2), seg = new Float64Array(W);
+      let windows = 0;
+      for (let s0 = 0; ; s0 += H) {
+        const s1 = Math.min(n, s0 + W), len = s1 - s0;
+        if (len > lagMax + 2) {
+          let r0 = 0;
+          for (let i = 0; i < len; i++) { seg[i] = e[s0 + i] * hw[i]; r0 += seg[i] * seg[i]; }
+          if (r0 > 1e-12) {
+            for (let l = 0; l <= lagMax + 1; l++) {
+              let s = 0;
+              for (let i = 0; i + l < len; i++) s += seg[i] * seg[i + l];
+              acf[l] += s / r0;
+            }
+            windows++;
+          }
+        }
+        if (s0 + W >= n) break;
+      }
+      if (!windows) return { bpm: 0, conf: 0, candidates: [] };
+      for (let l = 0; l < acf.length; l++) acf[l] /= windows;
+      const score = new Float64Array(lagMax + 2);
+      for (let l = lagMin; l <= lagMax; l++) {
+        const z = Math.log2((60 * fr) / l / 110) / 0.8;
+        score[l] = Math.max(0, acf[l]) * Math.exp(-0.5 * z * z);
+      }
+      const peaks = [];
+      for (let l = lagMin + 1; l < lagMax; l++) if (score[l] > 0 && score[l] > score[l - 1] && score[l] >= score[l + 1]) peaks.push(l);
+      peaks.sort((a, b) => score[b] - score[a]);
+      const refine = (l) => {
+        const a = acf[l - 1], b = acf[l], c = acf[l + 1], den = a - 2 * b + c;
+        return l + (den < 0 ? Math.max(-0.5, Math.min(0.5, (0.5 * (a - c)) / den)) : 0);
+      };
+      if (!peaks.length) return { bpm: 0, conf: 0, candidates: [] };
+      const best = peaks[0];
+      const bpm = (60 * fr) / refine(best);
+      const candidates = [];
+      const add = (b) => { if (b >= 40 && b <= 240 && candidates.every((c) => Math.abs(Math.log(c / b)) > 0.06)) candidates.push(b); };
+      add(bpm); add(bpm / 2); add(bpm * 2);
+      for (const l of peaks) { if (candidates.length >= 5) break; add((60 * fr) / refine(l)); }
+      return { bpm, conf: Math.max(0, acf[best]), candidates };
+    }
+    /* Dynamic-programming beat tracker (Ellis 2007, as in librosa). */
+    function track(env, fr, bpm, tightness) {
+      tightness = tightness || 100;
+      const n = env.length;
+      const period = (60 * fr) / bpm;
+      if (!(period > 2) || n < period * 3) return { frames: [], times: new Float64Array(0) };
+      const sd = stdev(env) || 1;
+      const o = new Float64Array(n);
+      for (let i = 0; i < n; i++) o[i] = env[i] / sd;
+      const sigma = period / 32, K = Math.max(1, Math.ceil(4 * sigma));
+      const g = new Float64Array(2 * K + 1);
+      for (let k = -K; k <= K; k++) g[k + K] = Math.exp(-0.5 * (k / sigma) * (k / sigma));
+      const local = new Float64Array(n);
+      let maxLocal = 0;
+      for (let i = 0; i < n; i++) {
+        let s = 0;
+        for (let k = -K; k <= K; k++) { const j = i + k; if (j >= 0 && j < n) s += o[j] * g[k + K]; }
+        local[i] = s;
+        if (s > maxLocal) maxLocal = s;
+      }
+      const lo = Math.max(1, Math.round(period / 2)), hi = Math.max(lo + 1, Math.round(2 * period));
+      const tx = new Float64Array(hi + 1);
+      for (let d = lo; d <= hi; d++) { const z = Math.log(d / period); tx[d] = -tightness * z * z; }
+      const cum = new Float64Array(n), back = new Int32Array(n).fill(-1);
+      let first = true;
+      for (let t = 0; t < n; t++) {
+        let best = -Infinity, arg = -1;
+        for (let d = lo; d <= hi; d++) {
+          const tau = t - d;
+          const v = (tau >= 0 ? cum[tau] : 0) + tx[d];
+          if (v > best) { best = v; arg = tau; }
+        }
+        cum[t] = local[t] + best;
+        if (first && local[t] < 0.01 * maxLocal) back[t] = -1;
+        else { back[t] = arg >= 0 ? arg : -1; first = false; }
+      }
+      const maxima = [];
+      for (let t = 1; t < n - 1; t++) if (cum[t] > cum[t - 1] && cum[t] >= cum[t + 1]) maxima.push(t);
+      let last = n - 1;
+      if (maxima.length) {
+        const thr = 0.5 * median(maxima.map((t) => cum[t]));
+        for (let k = maxima.length - 1; k >= 0; k--) if (cum[maxima[k]] >= thr) { last = maxima[k]; break; }
+      }
+      let frames = [];
+      for (let t = last; t >= 0; t = back[t]) { frames.push(t); if (back[t] < 0) break; }
+      frames.reverse();
+      if (frames.length > 4) {
+        const bl = frames.map((t) => local[t]);
+        const sm = bl.map((v, i) => (0.5 * (i > 0 ? bl[i - 1] : v) + v + 0.5 * (i < bl.length - 1 ? bl[i + 1] : v)) / 2);
+        const thr = 0.5 * Math.sqrt(sm.reduce((s, x) => s + x * x, 0) / sm.length);
+        let a = 0, b = frames.length;
+        while (a < b && sm[a] <= thr) a++;
+        while (b > a && sm[b - 1] <= thr) b--;
+        frames = frames.slice(a, b);
+      }
+      let om = 0;
+      for (let i = 0; i < n; i++) om += o[i];
+      om /= n;
+      const times = new Float64Array(frames.length);
+      for (let i = 0; i < frames.length; i++) {
+        const t = frames[i];
+        let p = t, pv = o[t];
+        for (let k = -2; k <= 2; k++) { const j = t + k; if (j > 0 && j < n - 1 && o[j] > pv) { pv = o[j]; p = j; } }
+        let frac = 0;
+        if (pv > om + 1 && p > 0 && p < n - 1) {
+          const a = o[p - 1], b = o[p], c = o[p + 1], den = a - 2 * b + c;
+          if (den < 0) frac = Math.max(-0.5, Math.min(0.5, (0.5 * (a - c)) / den));
+        } else p = t;
+        times[i] = (p + frac) / fr;
+      }
+      return { frames, times };
+    }
+    /* Local linear fit over 7 beats: removes onset-detection wobble but follows tempo drift. */
+    function smoothBeats(times) {
+      const n = times.length, out = new Float64Array(n);
+      for (let i = 0; i < n; i++) {
+        const a = Math.max(0, i - 3), b = Math.min(n - 1, i + 3), m = b - a + 1;
+        if (m < 3) { out[i] = times[i]; continue; }
+        let sk = 0, st = 0, skk = 0, skt = 0;
+        for (let k = a; k <= b; k++) { sk += k; st += times[k]; skk += k * k; skt += k * times[k]; }
+        const den = m * skk - sk * sk;
+        const slope = den ? (m * skt - sk * st) / den : 0;
+        out[i] = (st - slope * sk) / m + slope * i;
+      }
+      return out;
+    }
+    function beatStats(times) {
+      const nb = times.length, ibi = [];
+      for (let i = 1; i < nb; i++) ibi.push(times[i] - times[i - 1]);
+      const med = median(ibi);
+      const bpm = med > 0 ? 60 / med : 0;
+      const localBpm = new Float32Array(nb);
+      for (let i = 0; i < nb; i++) {
+        const seg = ibi.slice(Math.max(0, i - 3), Math.min(ibi.length, i + 3));
+        localBpm[i] = seg.length ? 60 / median(seg) : bpm;
+      }
+      const dev = ibi.map((v, i) => v - median(ibi.slice(Math.max(0, i - 4), Math.min(ibi.length, i + 5))));
+      return { bpm, localBpm, jitter: stdev(dev) * 1000 };
+    }
+    /* Which beat in each bar is "1": the phase whose beats carry the most bass onset energy plus some overall accent. */
+    function downbeat(times, fluxLow, env, fr, M) {
+      const nb = times.length;
+      if (nb < 2 * M || M < 2) return 0;
+      const low = new Float64Array(nb), all = new Float64Array(nb);
+      let sl = 0, sa = 0;
+      for (let i = 0; i < nb; i++) {
+        const f = Math.round(times[i] * fr);
+        let ml = 0, ma = 0;
+        for (let k = -3; k <= 3; k++) {
+          const j = f + k;
+          if (j >= 0 && j < env.length) { if (fluxLow[j] > ml) ml = fluxLow[j]; if (env[j] > ma) ma = env[j]; }
+        }
+        low[i] = ml; all[i] = ma; sl += ml; sa += ma;
+      }
+      sl = sl / nb || 1; sa = sa / nb || 1;
+      let best = 0, bestScore = -Infinity;
+      for (let p = 0; p < M; p++) {
+        let s = 0, c = 0;
+        for (let i = p; i < nb; i += M) { s += low[i] / sl + 0.35 * (all[i] / sa); c++; }
+        s /= c || 1;
+        if (s > bestScore) { bestScore = s; best = p; }
+      }
+      return best;
+    }
+    function analyze(y, sr, progress) {
+      if (progress) progress(0.02);
+      const peaks = wavePeaks(y, 2000);
+      const on = onsetEnvelope(y, sr, progress);
+      const prep = prepare(on.flux, on.fr);
+      if (progress) progress(0.84);
+      const tempo = estimateTempo(prep.det, on.fr);
+      if (progress) progress(0.9);
+      const tr = tempo.bpm ? track(prep.env, on.fr, tempo.bpm) : { times: new Float64Array(0) };
+      const st = beatStats(tr.times);
+      const times = smoothBeats(tr.times);
+      if (progress) progress(0.98);
+      return {
+        duration: y.length / sr, fr: on.fr,
+        env: prep.env, fluxLow: on.fluxLow, peaksMin: peaks.min, peaksMax: peaks.max,
+        tempo, times, localBpm: st.localBpm, bpm: st.bpm, jitter: st.jitter,
+      };
+    }
+    function retrack(res, bpm) {
+      const tr = track(res.env, res.fr, bpm);
+      const st = beatStats(tr.times);
+      return { times: smoothBeats(tr.times), localBpm: st.localBpm, bpm: st.bpm, jitter: st.jitter };
+    }
+    function transferables(res) {
+      return [res.env.buffer, res.fluxLow.buffer, res.peaksMin.buffer, res.peaksMax.buffer, res.times.buffer, res.localBpm.buffer];
+    }
+    return { analyze, retrack, downbeat, transferables };
+  }
+
+  /* =============================== Constants =============================== */
+  const BPM_MIN = 30, BPM_MAX = 260;
+  const LS_SET = 'nhipchuan:v1:settings';
+  const LS_HIST = 'nhipchuan:v1:history';
+  const DEFAULTS = {
+    bpm: 90, beats: 4, sub: 1, accent: true, length: 16, target: 85, diff: 'normal', gap: 'off', ramp: 'off',
+    sound: 'wood', subClick: true, volume: 80, latency: 0, source: 'metro', songClick: true, songVol: 80,
+  };
+  const DIFF = {
+    easy: { perfect: 0.040, good: 0.080, ok: 0.130, name: 'Dễ' },
+    normal: { perfect: 0.025, good: 0.050, ok: 0.090, name: 'Vừa' },
+    hard: { perfect: 0.015, good: 0.030, ok: 0.060, name: 'Khó' },
+  };
+  const GAPS = { off: null, '3-1': [3, 1], '2-2': [2, 2], '1-1': [1, 1], '4-4': [4, 4], '1-3': [1, 3] };
+  const RAMPS = { off: null, '2-4': [2, 4], '5-4': [5, 4], '5-8': [5, 8], '10-8': [10, 8] };
+  const POINTS = { perfect: 1, good: 0.8, ok: 0.5, miss: 0, extra: 0 };
+  const SCORE = { perfect: 300, good: 200, ok: 100, miss: 0, extra: 0 };
+  const LABEL = { perfect: 'Hoàn hảo', good: 'Tốt', ok: 'Khá', miss: 'Trượt', extra: 'Gõ thừa' };
+  const SUB_NAME = { 1: 'nốt đen', 2: 'móc đơn', 3: 'liên ba', 4: 'móc kép' };
+  const TEMPO_NAMES = [[40, 'Grave'], [60, 'Largo'], [66, 'Larghetto'], [76, 'Adagio'], [108, 'Andante'], [120, 'Moderato'], [168, 'Allegro'], [200, 'Presto'], [Infinity, 'Prestissimo']];
+  const LOOKAHEAD = 0.15, TICK_MS = 25, PREVIEW_LEAD = 0.55, PREROLL = 1.0, SONG_MAX_SEC = 1200;
+  const FONT_DISPLAY = '"Chakra Petch", "Be Vietnam Pro", system-ui, sans-serif';
+  const FONT_BODY = '"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif';
+  const FONT_DATA = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace';
+  const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* =============================== Helpers =============================== */
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+  const stdev = (a) => { if (a.length < 2) return 0; const m = avg(a); return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1)); };
+  const median = (a) => { const b = a.slice().sort((x, y) => x - y); const n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : 0; };
+  const tempoName = (b) => TEMPO_NAMES.find(([lim]) => b < lim)[1];
+  const nf1 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
+  const nf0 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+  const fmtPct = (v) => (v == null || !Number.isFinite(v) ? '—' : nf1.format(v) + '%');
+  const fmtMs = (ms) => { const r = Math.round(ms); return (r > 0 ? '+' : r < 0 ? '−' : '±') + Math.abs(r) + ' ms'; };
+  const describeOff = (ms) => (Math.abs(ms) < 0.5 ? '0 ms' : `${fmtMs(ms)} ${ms < 0 ? 'sớm' : 'muộn'}`);
+  const fmtTime = (s) => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const fmtDate = (ms) => { const d = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+  const shortName = (name, n) => { const s = String(name || '').replace(/\.[a-z0-9]{2,5}$/i, ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+  function lowerBound(arr, t, key) {
+    let lo = 0, hi = arr.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if ((key ? arr[m][key] : arr[m]) < t) lo = m + 1; else hi = m; }
+    return lo;
+  }
+  function hexA(hex, a) {
+    let h = String(hex || '').trim();
+    if (h[0] === '#') h = h.slice(1);
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    if (!/^[0-9a-f]{6}$/i.test(h)) return hex || 'transparent';
+    const n = parseInt(h, 16);
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+  }
+  function roundRectPath(g, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  }
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+  };
+  const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  function sanitize(o) {
+    const s = Object.assign({}, DEFAULTS, o && typeof o === 'object' ? o : {});
+    const num = (v, d) => (v !== null && v !== '' && Number.isFinite(+v) ? +v : d);
+    return {
+      bpm: clamp(Math.round(num(s.bpm, DEFAULTS.bpm)), BPM_MIN, BPM_MAX),
+      beats: clamp(Math.round(num(s.beats, DEFAULTS.beats)), 2, 7),
+      sub: [1, 2, 3, 4].includes(+s.sub) ? +s.sub : DEFAULTS.sub,
+      accent: s.accent !== false,
+      length: [8, 16, 32, 64, 0].includes(+s.length) ? +s.length : DEFAULTS.length,
+      target: clamp(Math.round(num(s.target, DEFAULTS.target) / 5) * 5, 50, 100),
+      diff: has(DIFF, s.diff) ? s.diff : DEFAULTS.diff,
+      gap: has(GAPS, s.gap) ? s.gap : 'off',
+      ramp: has(RAMPS, s.ramp) ? s.ramp : 'off',
+      sound: ['wood', 'click', 'beep'].includes(s.sound) ? s.sound : DEFAULTS.sound,
+      subClick: s.subClick !== false,
+      volume: clamp(Math.round(num(s.volume, DEFAULTS.volume)), 0, 100),
+      latency: clamp(Math.round(num(s.latency, 0)), -150, 350),
+      source: s.source === 'song' ? 'song' : 'metro',
+      songClick: s.songClick !== false,
+      songVol: clamp(Math.round(num(s.songVol, DEFAULTS.songVol)), 0, 100),
+    };
+  }
+
+  /* =============================== State =============================== */
+  let settings = sanitize(store.get(LS_SET, null));
+  let S = null;              // live session
+  let preview = null;        // idle preview of the exercise
+  let phase = 'idle';        // idle | starting | countin | play | calib | results
+  let lastResult = null, resultsAt = 0;
+  let clockDiff = null;
+  let hudDirty = true, laneDirty = true, meterDirty = true, songDirty = false;
+  let segs = [], chartPts = [], chartSel = null;
+  let toastTimer = 0, padTimer = 0, wakeLock = null, clearArmed = 0, spaceCaptured = false;
+  let ledKey = '', pendKey = '', countKey = null;
+  let SONG = null, aud = null, loadToken = 0, analysisSeq = 0, worker = null, workerBroken = false, mainBAInst = null;
+  let tempoHover = null, tempoGeo = null;
+  const A = { ctx: null, master: null, noise: null };
+  const el = {}, C = {}, J = {}, JT = {};
+  const sizes = new WeakMap();
+  const textCache = new WeakMap();
+  const isActive = () => phase === 'countin' || phase === 'play' || phase === 'calib';
+  const busyNow = () => isActive() || phase === 'starting';
+  const effSource = () => (settings.source === 'song' && SONG ? 'song' : 'metro');
+  const effBpm = () => (effSource() === 'song' ? clamp(Math.round(SONG.bpm), BPM_MIN, BPM_MAX) : settings.bpm);
+  const mainBA = () => mainBAInst || (mainBAInst = makeBeatAnalyzer());
+  function setText(node, v) { if (node && textCache.get(node) !== v) { textCache.set(node, v); node.textContent = v; } }
+
+  /* =============================== Audio =============================== */
+  const volGain = (v) => Math.pow(v / 100, 1.7) * 1.1;
+  const songGainOf = (v) => Math.pow(v / 100, 1.5);
+  function createAudio() {
+    if (A.ctx) return A.ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) throw new Error('no-webaudio');
+    try { A.ctx = new AC({ latencyHint: 'interactive' }); } catch (e) { A.ctx = new AC(); }
+    A.master = A.ctx.createGain();
+    A.master.gain.value = volGain(settings.volume);
+    A.master.connect(A.ctx.destination);
+    const len = Math.floor(A.ctx.sampleRate * 0.08);
+    A.noise = A.ctx.createBuffer(1, len, A.ctx.sampleRate);
+    const d = A.noise.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    A.ctx.onstatechange = () => {
+      if (A.ctx.state === 'running') return;
+      if (isActive()) { finishSession(true); toast('Âm thanh bị gián đoạn nên bài tập đã dừng.'); }
+      if (aud) stopAudition();
+    };
+    return A.ctx;
+  }
+  function ensureAudio() {
+    createAudio();
+    if (A.ctx.state === 'running') return Promise.resolve();
+    try { return Promise.resolve(A.ctx.resume()); } catch (e) { return Promise.reject(e); }
+  }
+  function env(gainNode, t, peak, attack, decay) {
+    gainNode.gain.setValueAtTime(0.0001, t);
+    gainNode.gain.exponentialRampToValueAtTime(peak, t + attack);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+  }
+  function playVoice(dest, t, lvl, sound) {
+    const ctx = A.ctx;
+    const L = lvl === 'accent' ? 0 : lvl === 'beat' ? 1 : 2;
+    if (sound === 'click') {
+      const o = ctx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime([2600, 1900, 1400][L], t);
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+      const g = ctx.createGain(); env(g, t, [0.5, 0.38, 0.22][L], 0.0006, 0.022);
+      o.connect(hp); hp.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.04);
+    } else if (sound === 'beep') {
+      const peak = [0.6, 0.45, 0.25][L];
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime([1320, 880, 660][L], t);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.003);
+      g.gain.setValueAtTime(peak, t + 0.035);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+      o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.1);
+    } else {
+      const f = [1250, 880, 660][L], peak = [0.95, 0.7, 0.4][L];
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(f * 1.45, t);
+      o.frequency.exponentialRampToValueAtTime(f, t + 0.012);
+      const g = ctx.createGain(); env(g, t, peak, 0.0015, 0.07);
+      o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.09);
+      const n = ctx.createBufferSource(); n.buffer = A.noise;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f * 2.4; bp.Q.value = 1.2;
+      const ng = ctx.createGain(); env(ng, t, peak * 0.55, 0.0008, 0.016);
+      n.connect(bp); bp.connect(ng); ng.connect(dest); n.start(t); n.stop(t + 0.03);
+    }
+  }
+  function chime(good) {
+    if (!A.ctx) return;
+    const t = A.ctx.currentTime + 0.06;
+    const notes = good ? [784, 988, 1175, 1568] : [698, 587];
+    notes.forEach((f, i) => {
+      const o = A.ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
+      const g = A.ctx.createGain(); env(g, t + i * 0.085, 0.2, 0.004, 0.32);
+      o.connect(g); g.connect(A.master); o.start(t + i * 0.085); o.stop(t + i * 0.085 + 0.4);
+    });
+  }
+  function applyVolume() { if (A.master && A.ctx) A.master.gain.setTargetAtTime(volGain(settings.volume), A.ctx.currentTime, 0.02); }
+  function applySongVolume() {
+    if (!A.ctx) return;
+    const g = songGainOf(settings.songVol), t = A.ctx.currentTime;
+    if (aud && aud.sg) aud.sg.gain.setTargetAtTime(g, t, 0.02);
+    if (S && S.songGain) S.songGain.gain.setTargetAtTime(g, t, 0.02);
+  }
+  function previewSound() {
+    if (isActive()) return;
+    let p;
+    try { p = ensureAudio(); } catch (e) { return; }
+    p.then(() => { if (!isActive() && A.ctx) playVoice(A.master, A.ctx.currentTime + 0.03, 'accent', settings.sound); }).catch(() => {});
+  }
+
+  /* Map performance.now() (ms) to the audio-context time the listener is hearing. */
+  function sampleClock() {
+    const ctx = A.ctx; if (!ctx) return;
+    const p = performance.now();
+    let heard = NaN;
+    if (typeof ctx.getOutputTimestamp === 'function') {
+      try {
+        const ts = ctx.getOutputTimestamp();
+        if (ts && ts.contextTime > 0 && ts.performanceTime > 0) {
+          const h = ts.contextTime + (p - ts.performanceTime) / 1000;
+          const lag = ctx.currentTime - h;
+          if (lag > -0.02 && lag < 0.5) heard = h;
+        }
+      } catch (e) { /* fall back below */ }
+    }
+    if (!Number.isFinite(heard)) heard = ctx.currentTime - ((ctx.baseLatency || 0) + (ctx.outputLatency || 0));
+    const d = heard - p / 1000;
+    if (clockDiff === null || Math.abs(d - clockDiff) > 0.05) clockDiff = d;
+    else clockDiff += (d - clockDiff) * 0.06;
+  }
+  const perfToHeard = (ms) => ms / 1000 + (clockDiff || 0);
+
+  /* =============================== Timeline =============================== */
+  function windowsFor(base, I) {
+    return {
+      perfect: Math.min(base.perfect, I * 0.12),
+      good: Math.min(base.good, I * 0.22),
+      ok: Math.min(base.ok, I * 0.36),
+      capture: Math.min(0.25, I * 0.5),
+    };
+  }
+  function bpmForBar(c, b) {
+    const r = RAMPS[c.ramp];
+    if (!r || b < 0) return c.bpm;
+    return Math.min(BPM_MAX, c.bpm + Math.floor(b / r[1]) * r[0]);
+  }
+  function barAudible(c, b) {
+    const gp = GAPS[c.gap];
+    if (!gp || b < 0) return true;
+    return (b % (gp[0] + gp[1])) < gp[0];
+  }
+  function makeTimeline(cfg, t0, countInBars) {
+    return { cfg, base: DIFF[cfg.diff], events: [], bars: [], barStats: [], genBar: -countInBars, genTime: t0, gb: 0, totalBars: cfg.length > 0 ? cfg.length : Infinity };
+  }
+  function genNextBar(o) {
+    const c = o.cfg, b = o.genBar, isCount = b < 0;
+    const bpm = bpmForBar(c, b), beatDur = 60 / bpm;
+    const sub = isCount ? 1 : c.sub;
+    const audible = isCount || barAudible(c, b);
+    const interval = beatDur / sub;
+    const w = windowsFor(o.base, interval);
+    const start = o.genTime;
+    const bar = { b, t: start, end: start + c.beats * beatDur, bpm, beatDur, sub, interval, audible, isCount, first: o.events.length, last: 0 };
+    for (let k = 0; k < c.beats; k++) {
+      for (let j = 0; j < sub; j++) {
+        o.events.push({
+          i: o.events.length, t: start + k * beatDur + j * interval, bar: b, beat: k, j, sub, gb: o.gb,
+          lvl: j > 0 ? 'sub' : (k === 0 && c.accent ? 'accent' : 'beat'),
+          audible: audible && (j === 0 || c.subClick),
+          scorable: !isCount, hidden: !isCount && !audible,
+          interval, beatDur, w, judged: false, r: null, off: null, jt: 0,
+        });
+      }
+      o.gb++;
+    }
+    bar.last = o.events.length - 1;
+    o.bars.push(bar);
+    if (!isCount) o.barStats[b] = { pts: 0, n: 0, offs: [], miss: 0, audible, bpm };
+    o.genTime = bar.end;
+    o.genBar++;
+  }
+  function generateUntil(o, tEnd) { while (o.genBar < o.totalBars && o.genTime < tEnd) genNextBar(o); }
+  function nearestScorable(o, t) {
+    const ev = o.events, k = lowerBound(ev, t, 't');
+    let best = null, bd = Infinity;
+    for (let q = Math.max(0, k - 2); q < Math.min(ev.length, k + 2); q++) {
+      const e = ev[q]; if (!e.scorable) continue;
+      const d = Math.abs(e.t - t); if (d < bd) { bd = d; best = e; }
+    }
+    return best;
+  }
+  function curWindows(s) {
+    const e = s.events[Math.min(s.judgeIdx, s.events.length - 1)];
+    return e && e.scorable ? e.w : s.firstEv.w;
+  }
+  const segCount = (o) => (o.cfg.length > 0 ? Math.max(1, Math.min(o.cfg.length, o.totalBars)) : 16);
+
+  /* ---------- song timeline: lead-in bar + scored bars cut from the detected beats ---------- */
+  function songPlan(cfg) {
+    const M = cfg.beats, times = SONG.times, n = times.length;
+    const maxBars = cfg.length > 0 ? cfg.length : Infinity;
+    const d0 = SONG.startIdx;
+    let bars = 0;
+    for (let i = d0 + M; bars < maxBars && i + M <= n - 1; i += M) bars++;
+    const at = (i) => times[Math.min(n - 1, i)];
+    return { d0, M, bars, leadStart: at(d0), start: at(d0 + M), end: at(d0 + M * (bars + 1)) };
+  }
+  function buildSongTimeline(cfg, T0) {
+    if (!SONG) return null;
+    const plan = songPlan(cfg);
+    if (plan.bars < 1) return null;
+    const times = SONG.times, M = plan.M;
+    const a0 = Math.max(0, times[plan.d0] - PREROLL);
+    const toCtx = (st) => T0 + (st - a0);
+    const o = makeTimeline(cfg, 0, 0);
+    o.totalBars = plan.bars;
+    for (let bi = -1; bi < plan.bars; bi++) {
+      const i0 = plan.d0 + M * (bi + 1);
+      const isCount = bi < 0, sub = isCount ? 1 : cfg.sub;
+      const t0 = toCtx(times[i0]), t1 = toCtx(times[i0 + M]);
+      const bar = { b: bi, t: t0, end: t1, bpm: (60 * M) / (times[i0 + M] - times[i0]), beatDur: (t1 - t0) / M, sub, interval: (t1 - t0) / M / sub, audible: true, isCount, first: o.events.length, last: 0 };
+      for (let k = 0; k < M; k++) {
+        const tb = toCtx(times[i0 + k]), ibi = toCtx(times[i0 + k + 1]) - tb, interval = ibi / sub;
+        for (let j = 0; j < sub; j++) {
+          o.events.push({
+            i: o.events.length, t: tb + j * interval, bar: bi, beat: k, j, sub, gb: o.gb,
+            lvl: j > 0 ? 'sub' : (k === 0 && cfg.accent ? 'accent' : 'beat'),
+            audible: cfg.songClick && (j === 0 || cfg.subClick),
+            scorable: !isCount, hidden: false,
+            interval, beatDur: ibi, w: windowsFor(o.base, interval), judged: false, r: null, off: null, jt: 0,
+          });
+        }
+        o.gb++;
+      }
+      bar.last = o.events.length - 1;
+      o.bars.push(bar);
+      if (!isCount) o.barStats[bi] = { pts: 0, n: 0, offs: [], miss: 0, audible: true, bpm: Math.round(bar.bpm) };
+    }
+    o.genBar = o.totalBars;
+    o.song = { a0, T0, name: SONG.name, plan };
+    return o;
+  }
+  const songCfg = () => Object.assign({}, settings, { bpm: effBpm(), gap: 'off', ramp: 'off' });
+
+  /* =============================== Session =============================== */
+  let timer = null;
+  function startTimer() { stopTimer(); timer = setInterval(schedTick, TICK_MS); schedTick(); }
+  function stopTimer() { if (timer) clearInterval(timer); timer = null; }
+  function schedTick() {
+    const s = S; if (!s || !isActive() || !A.ctx) return;
+    const now = A.ctx.currentTime;
+    if (s.totalBars === Infinity) generateUntil(s, now + 10);
+    const ev = s.events, horizon = now + LOOKAHEAD;
+    while (s.schedIdx < ev.length && ev[s.schedIdx].t < horizon) {
+      const e = ev[s.schedIdx++];
+      if (e.audible && e.t > now - 0.002) playVoice(s.bus, Math.max(e.t, now), e.lvl, s.cfg.sound);
+    }
+  }
+  function stopBus(s) {
+    if (!s || !s.bus || !A.ctx) return;
+    const t = A.ctx.currentTime, bus = s.bus, src = s.src;
+    try { bus.gain.cancelScheduledValues(t); bus.gain.setValueAtTime(bus.gain.value, t); bus.gain.linearRampToValueAtTime(0, t + 0.03); } catch (e) { /* ignore */ }
+    if (src) { try { src.stop(t + 0.06); } catch (e) { /* ignore */ } }
+    setTimeout(() => { try { bus.disconnect(); } catch (e) { /* ignore */ } }, 400);
+  }
+
+  async function startSession(mode) {
+    if (busyNow()) return;
+    let pr;
+    try { pr = ensureAudio(); } catch (e) { toast('Trình duyệt này không phát được âm thanh (thiếu Web Audio).'); return; }
+    stopAudition();
+    if (phase === 'results') closeResults();
+    phase = 'starting'; setStartBtn(); applyLocks();
+    await Promise.race([pr.catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
+    if (!A.ctx || A.ctx.state !== 'running') { phase = 'idle'; setStartBtn(); applyLocks(); toast('Chưa bật được âm thanh. Hãy bấm nút Bắt đầu lần nữa.'); return; }
+    const songMode = mode === 'play' && effSource() === 'song';
+    clockDiff = null; sampleClock();
+    let cfg, s;
+    if (songMode) {
+      cfg = songCfg();
+      s = buildSongTimeline(cfg, A.ctx.currentTime + 0.35);
+      if (!s) { phase = 'idle'; setStartBtn(); applyLocks(); toast('Đoạn còn lại của bài quá ngắn. Hãy chọn chỗ bắt đầu sớm hơn.'); return; }
+    } else {
+      cfg = mode === 'calib'
+        ? Object.assign({}, settings, { bpm: 100, beats: 4, sub: 1, accent: true, length: 6, gap: 'off', ramp: 'off', subClick: false, diff: 'normal' })
+        : Object.assign({}, settings);
+      const t0 = A.ctx.currentTime + 0.4;
+      s = makeTimeline(cfg, t0, cfg.beats <= 2 ? 2 : 1);
+      generateUntil(s, s.totalBars === Infinity ? t0 + 10 : Infinity);
+    }
+    Object.assign(s, {
+      mode, cal: mode === 'calib' ? 0 : cfg.latency / 1000,
+      schedIdx: 0, judgeIdx: 0, drawFrom: 0, ledIdx: 0, tapFrom: 0, curBar: 0,
+      counts: { perfect: 0, good: 0, ok: 0, miss: 0, extra: 0 }, pts: 0, n: 0, score: 0, combo: 0, maxCombo: 0,
+      hits: [], taps: [], recent: [], popup: null, flash: null, lastOff: null, calibOffs: [],
+    });
+    s.firstEv = s.events.find((e) => e.scorable);
+    s.firstT = s.firstEv.t;
+    if (s.totalBars !== Infinity) {
+      const le = s.events[s.events.length - 1];
+      s.endT = le.t; s.endCap = le.w.capture;
+      s.total = s.bars[s.bars.length - 1].end - s.firstT;
+    }
+    s.pps = ppsFor(cfg, laneW());
+    s.bus = A.ctx.createGain(); s.bus.connect(A.master);
+    if (songMode) {
+      const src = A.ctx.createBufferSource(); src.buffer = SONG.buffer;
+      const sg = A.ctx.createGain(); sg.gain.value = songGainOf(settings.songVol);
+      src.connect(sg); sg.connect(s.bus);
+      src.start(s.song.T0, s.song.a0);
+      s.src = src; s.songGain = sg;
+      songDirty = true;
+    }
+    S = s;
+    phase = mode === 'calib' ? 'calib' : 'countin';
+    buildLeds(cfg.beats); buildSegments(segCount(s));
+    applyLocks(); setStartBtn();
+    el.laneHint.hidden = true;
+    showCalib(mode === 'calib');
+    updateCountdownPos();
+    hudDirty = laneDirty = meterDirty = true;
+    startTimer(); requestWakeLock();
+    announce(mode === 'calib' ? 'Bắt đầu đo độ trễ. Nghe và gõ theo tiếng click.' : songMode ? 'Bắt đầu gõ theo bài hát. Đếm vào một ô nhịp.' : 'Bắt đầu. Đếm vào một ô nhịp.');
+  }
+
+  function update(vt) {
+    const s = S;
+    if (phase === 'countin' && vt >= s.firstT - s.firstEv.w.capture) phase = 'play';
+    if (s.mode === 'calib') {
+      updateCalibOverlay();
+      if (vt > s.endT + 0.45) finishSession(false);
+      return;
+    }
+    checkMisses(s, vt);
+    if (s.totalBars !== Infinity && vt > s.endT + s.endCap + 0.2) finishSession(false);
+  }
+  function checkMisses(s, vt) {
+    const ev = s.events;
+    while (s.judgeIdx < ev.length) {
+      const e = ev[s.judgeIdx];
+      if (!e.scorable || e.judged) { s.judgeIdx++; continue; }
+      if (vt - e.t > e.w.capture + 0.03) { judge(s, e, null, null); s.judgeIdx++; } else break;
+    }
+  }
+  function evTime(e) {
+    const now = performance.now(), ts = e && e.timeStamp;
+    return ts > 0 && ts <= now + 5 && now - ts < 1000 ? ts : now;
+  }
+  function onTapEvent(ts) {
+    pulsePad();
+    if (phase === 'idle') { startSession('play'); return; }
+    if (phase === 'results') { if (performance.now() - resultsAt > 900) startSession('play'); return; }
+    if (!isActive() || !S || !A.ctx) return;
+    sampleClock();
+    const s = S, t = perfToHeard(ts) - s.cal, ev = s.events;
+    let best = null, bd = Infinity;
+    for (let i = s.judgeIdx; i < ev.length; i++) {
+      const e = ev[i];
+      if (e.t - t > 0.3) break;
+      if (!e.scorable || e.judged) continue;
+      const d = Math.abs(t - e.t);
+      if (d <= e.w.capture && d < bd) { bd = d; best = e; }
+    }
+    if (s.mode === 'calib') {
+      if (best) { best.judged = true; s.calibOffs.push(t - best.t); }
+      return;
+    }
+    if (best) judge(s, best, t - best.t, t);
+    else if (t > s.firstT - s.firstEv.w.capture && (s.totalBars === Infinity || t < s.endT + s.endCap)) extraTap(s, t);
+  }
+  function judge(s, e, off, tapT) {
+    e.judged = true; e.jt = performance.now();
+    let r = 'miss';
+    if (off !== null) { const a = Math.abs(off); r = a <= e.w.perfect ? 'perfect' : a <= e.w.good ? 'good' : a <= e.w.ok ? 'ok' : 'miss'; }
+    e.r = r; e.off = off;
+    s.counts[r]++; s.pts += POINTS[r]; s.n++;
+    const bs = s.barStats[e.bar];
+    bs.pts += POINTS[r]; bs.n++;
+    if (r === 'miss') bs.miss++;
+    if (off !== null) {
+      bs.offs.push(off);
+      s.recent.push({ off, r, at: e.jt });
+      if (s.recent.length > 24) s.recent.shift();
+      s.lastOff = off;
+    }
+    s.hits.push({ t: e.t, off, r, bar: e.bar, beat: e.beat, j: e.j, sub: e.sub, silent: e.hidden });
+    if (r === 'miss') s.combo = 0; else { s.combo++; if (s.combo > s.maxCombo) s.maxCombo = s.combo; }
+    s.score += Math.round(SCORE[r] * (1 + Math.min(s.combo, 100) / 100));
+    if (tapT != null) s.taps.push({ t: tapT, r });
+    let text = LABEL[r].toUpperCase();
+    if (r === 'miss' && off !== null) text = off < 0 ? 'QUÁ SỚM' : 'QUÁ MUỘN';
+    s.popup = { text, sub: off !== null ? fmtMs(off * 1000) : '', r, at: e.jt };
+    if (off !== null) s.flash = { r, at: e.jt };
+    hudDirty = true;
+  }
+  function extraTap(s, t) {
+    s.counts.extra++; s.n++; s.combo = 0;
+    const near = nearestScorable(s, t);
+    if (near && s.barStats[near.bar]) s.barStats[near.bar].n++;
+    s.taps.push({ t, r: 'extra' });
+    s.popup = { text: 'GÕ THỪA', sub: '', r: 'extra', at: performance.now() };
+    hudDirty = true;
+  }
+
+  function finishSession(aborted) {
+    const s = S; if (!s || !isActive()) return;
+    stopTimer(); stopBus(s); releaseWakeLock();
+    S = null; phase = 'idle';
+    applyLocks(); setStartBtn(); showCountdown(null); showCalib(false);
+    if (s.song) songDirty = true;
+    if (s.mode === 'calib') { finishCalib(s); toIdle(); return; }
+    const judged = s.counts.perfect + s.counts.good + s.counts.ok + s.counts.miss;
+    if (judged < 4) { toIdle(); toast(aborted ? 'Đã dừng. Chưa đủ nốt để chấm điểm.' : 'Bài tập đã kết thúc.'); return; }
+    const res = computeResult(s, aborted);
+    if (!res.stoppedEarly) { try { chime(res.pass); } catch (e) { /* ignore */ } }
+    saveHistory(res); renderHistory();
+    showResults(res);
+  }
+  function finishCalib(s) {
+    const offs = s.calibOffs.map((x) => x * 1000);
+    if (offs.length < 8) {
+      setCalibMsg('Chưa đủ dữ liệu: cần ít nhất 8 lần gõ trùng tiếng click. Hãy đo lại.', 'warn');
+      toast('Đo độ trễ chưa xong.');
+      return;
+    }
+    const use = offs.length > 12 ? offs.slice(4) : offs;
+    const m = median(use);
+    const mad = median(use.map((x) => Math.abs(x - m)));
+    const val = clamp(Math.round(m), -150, 350);
+    settings.latency = val; saveSettings(); syncForm();
+    const shaky = mad > 30;
+    setCalibMsg(`Độ trễ đo được: ${fmtMs(val)}${shaky ? `, dao động ±${Math.round(mad)} ms nên đo lại một lần nữa` : ''}. Đã áp dụng vào Bù trễ.`, shaky ? 'warn' : 'ok');
+    toast(`Đã đặt bù trễ ${fmtMs(val)}.`);
+  }
+  function toIdle() {
+    el.laneHint.hidden = false;
+    refreshPreview();
+    hudDirty = true;
+  }
+
+  /* =============================== Wake lock =============================== */
+  async function requestWakeLock() {
+    try { if (navigator.wakeLock && document.visibilityState === 'visible') wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { wakeLock = null; }
+  }
+  function releaseWakeLock() { try { if (wakeLock) wakeLock.release(); } catch (e) { /* ignore */ } wakeLock = null; }
+
+  /* =============================== Song: load & analyse =============================== */
+  function readFileBuffer(file) {
+    if (file.arrayBuffer) return file.arrayBuffer();
+    return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsArrayBuffer(file); });
+  }
+  function decodeAudio(arr) {
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const ok = (b) => { if (!done) { done = true; resolve(b); } };
+      const bad = (e) => { if (!done) { done = true; reject(e || new Error('decode')); } };
+      try { const p = A.ctx.decodeAudioData(arr, ok, bad); if (p && typeof p.then === 'function') p.then(ok, bad); } catch (e) { bad(e); }
+    });
+  }
+  /* Mono mix, decimated to ~22-24 kHz (pair average) for the analyser. */
+  function mixDown(buffer) {
+    const sr = buffer.sampleRate, nCh = buffer.numberOfChannels;
+    const len = Math.min(buffer.length, Math.floor(SONG_MAX_SEC * sr));
+    const d = sr > 30000 ? 2 : 1, outLen = Math.floor(len / d);
+    const out = new Float32Array(outLen);
+    for (let c = 0; c < nCh; c++) {
+      const ch = buffer.getChannelData(c);
+      if (d === 2) for (let i = 0; i < outLen; i++) out[i] += ch[2 * i] + ch[2 * i + 1];
+      else for (let i = 0; i < outLen; i++) out[i] += ch[i];
+    }
+    const k = 1 / (nCh * d);
+    for (let i = 0; i < outLen; i++) out[i] *= k;
+    return { mono: out, sr: sr / d };
+  }
+  function getWorker() {
+    if (workerBroken) return null;
+    if (worker) return worker;
+    try {
+      const code = `const BA = (${makeBeatAnalyzer.toString()})();
+self.onmessage = (e) => {
+  const d = e.data;
+  try {
+    const res = BA.analyze(d.samples, d.sr, (p) => self.postMessage({ id: d.id, type: 'progress', p }));
+    self.postMessage({ id: d.id, type: 'done', res }, BA.transferables(res));
+  } catch (err) { self.postMessage({ id: d.id, type: 'error', message: String((err && err.message) || err) }); }
+};`;
+      worker = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })));
+      return worker;
+    } catch (e) { workerBroken = true; return null; }
+  }
+  /* Runs the analyser in a Worker; falls back to the main thread if Workers are unavailable. */
+  function runAnalysis(makeSamples, onProgress) {
+    return new Promise((resolve, reject) => {
+      const runMain = () => {
+        onProgress(0.5);
+        setTimeout(() => {
+          try { const { mono, sr } = makeSamples(); resolve(mainBA().analyze(mono, sr, null)); } catch (e) { reject(e); }
+        }, 50);
+      };
+      const w = getWorker();
+      if (!w) { runMain(); return; }
+      const id = ++analysisSeq;
+      let settled = false, heard = false, watch = 0;
+      const cleanup = () => { w.removeEventListener('message', onMsg); w.removeEventListener('error', onErr); clearTimeout(watch); };
+      const fail = () => {
+        if (settled) return;
+        settled = true; cleanup(); workerBroken = true;
+        try { w.terminate(); } catch (e) { /* ignore */ }
+        worker = null;
+        runMain();
+      };
+      const onMsg = (e) => {
+        const d = e.data;
+        if (!d || d.id !== id) return;
+        heard = true;
+        if (d.type === 'progress') onProgress(d.p);
+        else if (d.type === 'done') { settled = true; cleanup(); resolve(d.res); }
+        else if (d.type === 'error') { settled = true; cleanup(); reject(new Error(d.message)); }
+      };
+      const onErr = () => fail();
+      watch = setTimeout(() => { if (!heard) fail(); }, 6000);
+      w.addEventListener('message', onMsg);
+      w.addEventListener('error', onErr);
+      try {
+        const { mono, sr } = makeSamples();
+        w.postMessage({ id, samples: mono, sr }, [mono.buffer]);
+      } catch (e) { fail(); }
+    });
+  }
+  function songStatus(p, text, isErr) {
+    el.songStatus.hidden = false;
+    el.songStatus.classList.toggle('err', !!isErr);
+    el.songProg.style.width = Math.round(clamp(p, 0, 1) * 100) + '%';
+    setText(el.songStatusText, text);
+  }
+  async function loadSong(file) {
+    if (!file) return;
+    if (busyNow()) { toast('Hãy dừng bài đang chơi trước khi tải file mới.'); return; }
+    if (file.size > 300 * 1024 * 1024) { songStatus(0, 'File lớn quá 300 MB. Hãy chọn file nhỏ hơn.', true); return; }
+    stopAudition();
+    const token = ++loadToken;
+    const name = file.name || 'Bài hát';
+    el.songDrop.classList.add('busy');
+    songStatus(0.02, `Đang đọc “${shortName(name, 48)}”…`);
+    try {
+      const arr = await readFileBuffer(file);
+      if (token !== loadToken) return;
+      createAudio();
+      songStatus(0.06, 'Đang giải mã âm thanh…');
+      const buffer = await decodeAudio(arr);
+      if (token !== loadToken) return;
+      if (buffer.duration < 6) { songStatus(0, 'Bài quá ngắn để phân tích, cần ít nhất 6 giây.', true); return; }
+      songStatus(0.1, 'Đang phân tích beat… 10%');
+      const res = await runAnalysis(() => mixDown(buffer), (p) => {
+        if (token === loadToken) { const q = 0.1 + 0.88 * p; songStatus(q, `Đang phân tích beat… ${Math.round(q * 100)}%`); }
+      });
+      if (token !== loadToken) return;
+      if (!res || !(res.bpm > 0) || res.times.length < 8) {
+        songStatus(0, 'Không tìm thấy nhịp rõ ràng trong file này. Hãy thử một bài có trống hoặc nhịp đều hơn.', true);
+        return;
+      }
+      applyAnalysis(name, buffer, res);
+    } catch (e) {
+      if (token === loadToken) songStatus(0, 'Không đọc được file này. Hãy thử MP3, WAV hoặc M4A.', true);
+    } finally {
+      if (token === loadToken) el.songDrop.classList.remove('busy');
+      el.songFile.value = '';
+    }
+  }
+  function applyAnalysis(name, buffer, res) {
+    const envArr = res.env, step = Math.max(1, Math.floor(envArr.length / 4000)), sample = [];
+    for (let i = 0; i < envArr.length; i += step) sample.push(envArr[i]);
+    sample.sort((a, b) => a - b);
+    const envMax = sample[Math.floor(sample.length * 0.995)] || 1;
+    SONG = {
+      name, buffer, dur: Math.min(buffer.duration, res.duration + 0.01), res, envMax,
+      times: res.times, localBpm: res.localBpm, bpm: res.bpm, jitter: res.jitter,
+      conf: res.tempo.conf, candidates: res.tempo.candidates, trackBpm: res.tempo.bpm, phase: 0, startIdx: 0,
+    };
+    recomputeDownbeat(null);
+    settings.source = 'song'; saveSettings();
+    el.songStatus.hidden = true;
+    el.songBody.hidden = false;
+    renderSongInfo();
+    syncForm(); refreshPreview(); applyLocks();
+    songDirty = true;
+    toast(`Đã phân tích xong: khoảng ${Math.round(SONG.bpm)} BPM. Nhấn Space để gõ theo bài.`);
+    announce(`Phân tích xong. Tempo khoảng ${Math.round(SONG.bpm)} BPM, ${SONG.times.length} beat.`);
+  }
+  function recomputeDownbeat(keepTime) {
+    if (!SONG) return;
+    SONG.phase = mainBA().downbeat(SONG.times, SONG.res.fluxLow, SONG.res.env, SONG.res.fr, settings.beats);
+    setSongStart(keepTime == null ? SONG.times[SONG.phase] : keepTime);
+  }
+  function setSongStart(t) {
+    const s = SONG, M = settings.beats, n = s.times.length;
+    let best = -1, bd = Infinity;
+    for (let i = s.phase; i + 2 * M <= n - 1; i += M) { const d = Math.abs(s.times[i] - t); if (d < bd) { bd = d; best = i; } }
+    s.startIdx = best >= 0 ? best : s.phase;
+  }
+  function moveSongStart(bars) {
+    if (!SONG || busyNow()) return;
+    const M = settings.beats, i = clamp(SONG.startIdx + bars * M, SONG.phase, SONG.times.length - 1);
+    setSongStart(SONG.times[i]);
+    afterSongEdit(true);
+  }
+  function shiftDownbeat(dir) {
+    if (!SONG || busyNow()) return;
+    const M = settings.beats, keep = SONG.times[SONG.startIdx];
+    SONG.phase = (SONG.phase + dir + M) % M;
+    setSongStart(keep);
+    afterSongEdit(false);
+  }
+  function chooseTempo(bpm) {
+    if (!SONG || busyNow()) return;
+    const keep = SONG.times[SONG.startIdx];
+    const r = mainBA().retrack(SONG.res, bpm);
+    if (r.times.length < 8) { toast('Không dò được beat ở tempo này.'); return; }
+    stopAudition();
+    Object.assign(SONG, { times: r.times, localBpm: r.localBpm, bpm: r.bpm, jitter: r.jitter, trackBpm: bpm });
+    recomputeDownbeat(keep);
+    renderSongInfo();
+    afterSongEdit(false);
+  }
+  function afterSongEdit(restartAudition) {
+    updateSongStartLabel(); syncLabels(); refreshPreview();
+    songDirty = true;
+    if (restartAudition && aud) { stopAudition(); toggleAudition(); }
+  }
+  function confLevel(c) {
+    if (c >= 0.35) return { label: 'Rất rõ', key: 'perfect' };
+    if (c >= 0.15) return { label: 'Rõ', key: 'good' };
+    if (c >= 0.08) return { label: 'Trung bình', key: 'ok' };
+    return { label: 'Yếu, nên kiểm tra bằng tai', key: 'miss' };
+  }
+  function renderSongInfo() {
+    const s = SONG; if (!s) return;
+    setText(el.songBpmVal, String(Math.round(s.bpm)));
+    setText(el.songTempoName, tempoName(Math.round(s.bpm)));
+    setText(el.songBpmPrecise, `${nf1.format(s.bpm)} BPM`);
+    setText(el.songName, s.name);
+    setText(el.songDur, fmtTime(s.dur));
+    setText(el.songBeats, nf0.format(s.times.length));
+    const c = confLevel(s.conf);
+    el.songConf.textContent = '';
+    const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = `var(--j-${c.key})`;
+    el.songConf.append(dot, document.createTextNode(c.label));
+    setText(el.songStab, `±${Math.round(s.jitter)} ms`);
+    el.songAlts.textContent = '';
+    const list = s.candidates.slice();
+    if (list.every((b) => Math.abs(Math.log(b / s.trackBpm)) > 0.06)) list.push(s.trackBpm);
+    list.sort((a, b) => a - b);
+    for (const b of list.slice(0, 6)) {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'alt-chip';
+      btn.textContent = `${Math.round(b)} BPM`;
+      btn.title = 'Dò lại beat theo tempo này';
+      btn.setAttribute('aria-pressed', String(Math.abs(Math.log(b / s.trackBpm)) < 0.03));
+      btn.disabled = busyNow();
+      btn.addEventListener('click', () => chooseTempo(b));
+      el.songAlts.appendChild(btn);
+    }
+    el.songUseBpmBtn.textContent = `Dùng ${clamp(Math.round(s.bpm), BPM_MIN, BPM_MAX)} BPM cho metronome`;
+    let lo = Infinity, hi = -Infinity;
+    for (const v of s.localBpm) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    setText(el.tempoNote, `trung bình ${nf1.format(s.bpm)} BPM · từ ${Math.round(lo)} đến ${Math.round(hi)}`);
+    updateSongStartLabel();
+  }
+  function updateSongStartLabel() {
+    if (!SONG) return;
+    const plan = songPlan(settings), M = settings.beats;
+    const barNo = Math.floor((SONG.startIdx - SONG.phase) / M) + 1;
+    setText(el.songStartLbl, plan.bars > 0
+      ? `Bắt đầu từ ô ${barNo} (${fmtTime(SONG.times[SONG.startIdx])}) · ${plan.bars} ô được chấm`
+      : 'Chỗ bắt đầu quá gần cuối bài');
+  }
+
+  /* ---------- audition ---------- */
+  async function toggleAudition() {
+    if (aud) { stopAudition(); return; }
+    if (!SONG || busyNow()) return;
+    let pr;
+    try { pr = ensureAudio(); } catch (e) { return; }
+    await Promise.race([pr.catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
+    if (!A.ctx || A.ctx.state !== 'running' || busyNow() || aud) return;
+    const ctx = A.ctx;
+    const a0 = Math.max(0, SONG.times[SONG.startIdx] - PREROLL);
+    const T0 = ctx.currentTime + 0.12;
+    const bus = ctx.createGain(); bus.connect(A.master);
+    const src = ctx.createBufferSource(); src.buffer = SONG.buffer;
+    const sg = ctx.createGain(); sg.gain.value = songGainOf(settings.songVol);
+    src.connect(sg); sg.connect(bus);
+    src.start(T0, a0);
+    aud = { src, sg, bus, T0, a0, next: lowerBound(SONG.times, a0), timer: setInterval(audTick, TICK_MS) };
+    src.onended = () => { if (aud && aud.src === src) stopAudition(); };
+    clockDiff = null; sampleClock();
+    setText(el.songPlayBtn, 'Dừng nghe');
+    audTick();
+  }
+  function audTick() {
+    if (!aud || !A.ctx || !SONG) return;
+    const now = A.ctx.currentTime, horizon = now + LOOKAHEAD, times = SONG.times, M = settings.beats;
+    while (aud.next < times.length) {
+      const ct = aud.T0 + (times[aud.next] - aud.a0);
+      if (ct >= horizon) break;
+      if (ct > now - 0.002 && settings.songClick) {
+        const down = (((aud.next - SONG.phase) % M) + M) % M === 0;
+        playVoice(aud.bus, Math.max(ct, now), down && settings.accent ? 'accent' : 'beat', settings.sound);
+      }
+      aud.next++;
+    }
+  }
+  function stopAudition() {
+    if (!aud) return;
+    const a = aud; aud = null;
+    clearInterval(a.timer);
+    try { a.bus.gain.setTargetAtTime(0, A.ctx.currentTime, 0.01); } catch (e) { /* ignore */ }
+    setTimeout(() => { try { a.src.stop(); } catch (e) { /* ignore */ } try { a.bus.disconnect(); } catch (e) { /* ignore */ } }, 80);
+    setText(el.songPlayBtn, 'Nghe thử');
+    songDirty = true;
+  }
+  function songPlayhead() {
+    if (!A.ctx) return null;
+    if (aud) { sampleClock(); return aud.a0 + (perfToHeard(performance.now()) - aud.T0); }
+    if (S && S.song && isActive()) return S.song.a0 + (perfToHeard(performance.now()) - S.song.T0);
+    return null;
+  }
+
+  /* ---------- song views ---------- */
+  function drawSongViews(full) {
+    if (!SONG || el.songBody.hidden) return;
+    const ph = songPlayhead();
+    drawWave(ph);
+    drawDetail(ph);
+    if (full) drawTempoCurve();
+    const shown = ph != null ? clamp(ph, 0, SONG.dur) : SONG.times[SONG.startIdx];
+    setText(el.songTime, `${fmtTime(shown)} / ${fmtTime(SONG.dur)}`);
+  }
+  function drawWave(ph) {
+    const f = fitCanvas(el.waveCv); if (!f) return;
+    const { g, W, H } = f;
+    g.clearRect(0, 0, W, H);
+    const s = SONG, dur = s.dur, X = (t) => (t / dur) * W;
+    const plan = songPlan(settings), M = settings.beats, times = s.times;
+    if (plan.bars > 0) {
+      g.fillStyle = hexA(C.accent, 0.07); g.fillRect(X(plan.leadStart), 0, X(plan.start) - X(plan.leadStart), H);
+      g.fillStyle = hexA(C.accent, 0.13); g.fillRect(X(plan.start), 0, X(plan.end) - X(plan.start), H);
+    }
+    const mid = Math.round(H * 0.57), amp = H * 0.38, pmin = s.res.peaksMin, pmax = s.res.peaksMax, bins = pmin.length;
+    const px = ph != null ? X(ph) : -1;
+    for (let x = 0; x < W; x++) {
+      const b0 = Math.floor((x / W) * bins), b1 = Math.max(b0 + 1, Math.floor(((x + 1) / W) * bins));
+      let lo = 0, hi = 0;
+      for (let b = b0; b < b1 && b < bins; b++) { if (pmin[b] < lo) lo = pmin[b]; if (pmax[b] > hi) hi = pmax[b]; }
+      g.fillStyle = x < px ? C.ink2 : C.staff;
+      g.fillRect(x, mid - hi * amp, 1, Math.max(1, (hi - lo) * amp));
+    }
+    const barPx = ((M * 60) / s.bpm / dur) * W, every = barPx < 5 ? Math.ceil(5 / barPx) : 1;
+    g.fillStyle = C.ink;
+    for (let i = s.phase, k = 0; i < times.length; i += M, k++) {
+      if (k % every) continue;
+      g.globalAlpha = 0.55; g.fillRect(Math.round(X(times[i])), 0, 1, 8);
+    }
+    g.globalAlpha = 1;
+    if (plan.bars > 0) {
+      const sx = Math.round(X(times[s.startIdx]));
+      g.fillStyle = C.accent; g.fillRect(sx - 1, 0, 2, H);
+      g.beginPath(); g.moveTo(sx + 1, 10); g.lineTo(sx + 10, 14.5); g.lineTo(sx + 1, 19); g.closePath(); g.fill();
+    }
+    if (px >= 0) { g.fillStyle = C.ink; g.fillRect(Math.round(px) - 1, 0, 2, H); }
+  }
+  function drawDetail(ph) {
+    const f = fitCanvas(el.detailCv); if (!f) return;
+    const { g, W, H } = f;
+    g.clearRect(0, 0, W, H);
+    const s = SONG, M = settings.beats, times = s.times, envArr = s.res.env, fr = s.res.fr;
+    const focus = ph != null ? ph : times[s.startIdx] + ((M * 60) / s.bpm) * 0.6;
+    const span = clamp(W / 150, 3, 7), t0 = focus - span * 0.35, t1 = t0 + span;
+    const X = (t) => ((t - t0) / span) * W;
+    const top = 18, base = H - 16, hgt = base - top;
+    const i0 = Math.max(0, Math.floor(t0 * fr)), i1 = Math.min(envArr.length - 1, Math.ceil(t1 * fr));
+    if (i1 > i0) {
+      const yOf = (i) => base - Math.min(1, envArr[i] / s.envMax) * hgt;
+      g.beginPath(); g.moveTo(X(i0 / fr), base);
+      for (let i = i0; i <= i1; i++) g.lineTo(X(i / fr), yOf(i));
+      g.lineTo(X(i1 / fr), base); g.closePath();
+      g.fillStyle = hexA(C.accent, 0.12); g.fill();
+      g.beginPath();
+      for (let i = i0; i <= i1; i++) { const x = X(i / fr), y = yOf(i); if (i === i0) g.moveTo(x, y); else g.lineTo(x, y); }
+      g.strokeStyle = C.accent; g.lineWidth = 1.5; g.lineJoin = 'round'; g.stroke();
+    }
+    g.fillStyle = C.line; g.fillRect(0, base, W, 1);
+    g.font = `500 10px ${FONT_DATA}`; g.textBaseline = 'top'; g.textAlign = 'left';
+    for (let k = lowerBound(times, t0 - 0.1); k < times.length && times[k] <= t1 + 0.1; k++) {
+      const x = Math.round(X(times[k]));
+      const down = (((k - s.phase) % M) + M) % M === 0;
+      g.fillStyle = C.ink; g.globalAlpha = down ? 0.85 : 0.35;
+      g.fillRect(down ? x - 1 : x, top - 6, down ? 2 : 1, base - top + 6);
+      if (down && k >= s.phase) { g.globalAlpha = 1; g.fillStyle = C.muted; g.fillText('Ô ' + (Math.floor((k - s.phase) / M) + 1), x + 4, 3); }
+    }
+    g.globalAlpha = 1;
+    g.fillStyle = C.muted; g.textBaseline = 'bottom'; g.textAlign = 'center';
+    for (let t = Math.ceil(t0); t <= t1; t++) {
+      if (t < 0) continue;
+      const x = X(t);
+      g.fillRect(Math.round(x), base, 1, 3);
+      g.fillText(fmtTime(t), clamp(x, 14, W - 14), H - 1);
+    }
+    if (ph != null) { g.fillStyle = C.ink; g.fillRect(Math.round(X(ph)) - 1, 0, 2, H); }
+  }
+  function drawTempoCurve() {
+    const f = fitCanvas(el.tempoCv); if (!f) return;
+    const { g, W, H } = f;
+    g.clearRect(0, 0, W, H);
+    const s = SONG, lb = s.localBpm, times = s.times, n = times.length;
+    if (n < 4) return;
+    const padL = 44, padR = 10, padT = 8, padB = 22, pw = Math.max(10, W - padL - padR), ph = Math.max(10, H - padT - padB);
+    let dev = 0;
+    for (let i = 0; i < n; i++) dev = Math.max(dev, Math.abs(lb[i] - s.bpm));
+    const r = [4, 6, 8, 10, 15, 20, 30, 40, 60, 80].find((v) => v >= dev * 1.1) || 80;
+    const center = Math.round(s.bpm);
+    const X = (t) => padL + clamp(t / s.dur, 0, 1) * pw;
+    const Y = (b) => padT + ph / 2 - clamp((b - center) / r, -1, 1) * (ph / 2);
+    g.font = `500 10.5px ${FONT_DATA}`; g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (const v of [center - r, center, center + r]) {
+      const y = Math.round(Y(v)) + 0.5;
+      g.strokeStyle = v === center ? C.staff : C.line; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + pw, y); g.stroke();
+      g.fillStyle = C.muted; g.fillText(String(v), padL - 6, y);
+    }
+    const stepS = [5, 10, 15, 20, 30, 60, 90, 120, 180, 300, 600].find((v) => v >= s.dur / Math.max(2, Math.floor(pw / 70))) || 600;
+    g.textAlign = 'center'; g.textBaseline = 'top';
+    for (let t = 0; t <= s.dur; t += stepS) {
+      const x = X(t);
+      g.fillStyle = C.line; g.fillRect(Math.round(x), padT + ph, 1, 4);
+      g.fillStyle = C.muted; g.fillText(fmtTime(t), clamp(x, padL + 12, padL + pw - 12), padT + ph + 6);
+    }
+    g.beginPath();
+    for (let i = 0; i < n; i++) { const x = X(times[i]), y = Y(lb[i]); if (i) g.lineTo(x, y); else g.moveTo(x, y); }
+    g.strokeStyle = C.accent; g.lineWidth = 2; g.lineJoin = 'round'; g.lineCap = 'round'; g.stroke(); g.lineCap = 'butt';
+    tempoGeo = { X, Y, padL, pw, padT, ph };
+    if (tempoHover != null && tempoHover < n) {
+      const x = X(times[tempoHover]), y = Y(lb[tempoHover]);
+      g.fillStyle = C.line; g.fillRect(Math.round(x), padT, 1, ph);
+      g.fillStyle = C.screen; g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill();
+      g.fillStyle = C.accent; g.beginPath(); g.arc(x, y, 4, 0, Math.PI * 2); g.fill();
+    }
+  }
+  function showTempoTip(i) {
+    if (!SONG || !tempoGeo || i == null) { el.tempoTip.hidden = true; return; }
+    const x = tempoGeo.X(SONG.times[i]), y = tempoGeo.Y(SONG.localBpm[i]);
+    el.tempoTip.textContent = '';
+    const strong = document.createElement('strong'); strong.textContent = `${nf1.format(SONG.localBpm[i])} BPM`;
+    const span = document.createElement('span'); span.textContent = `beat ${i + 1} · ${fmtTime(SONG.times[i])}`;
+    el.tempoTip.append(strong, span);
+    const W = (sizes.get(el.tempoCv) || {}).w || el.tempoCv.clientWidth;
+    el.tempoTip.style.left = clamp(x, 70, Math.max(70, W - 70)) + 'px';
+    el.tempoTip.style.top = y + 'px';
+    el.tempoTip.hidden = false;
+  }
+
+  /* =============================== Canvas basics =============================== */
+  function fitCanvas(cv) {
+    let sz = sizes.get(cv);
+    if (!sz || !sz.w) { const r = cv.getBoundingClientRect(); sz = { w: r.width, h: r.height }; }
+    if (sz.w < 2 || sz.h < 2) return null;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const w = Math.round(sz.w * dpr), h = Math.round(sz.h * dpr);
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    const g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { g, W: sz.w, H: sz.h };
+  }
+  function laneW() { const sz = sizes.get(el.lane); return (sz && sz.w) || el.lane.getBoundingClientRect().width || 640; }
+  function laneGeo(W, H) {
+    const u = clamp(H / 180, 0.78, 1.2);
+    return {
+      W, H, u,
+      staffY: Math.round(H * 0.58) + 0.5,
+      rx: 7.2 * u, ry: 5.2 * u,
+      stem: 46 * u, beamH: 4.6 * u,
+      tapY: Math.round(H * 0.82),
+      playX: Math.round(clamp(W * 0.24, 96, 220)),
+      clefW: 54,
+      popY: Math.round(20 * u),
+      bandTop: Math.round(H * 0.17), bandBot: Math.round(H * 0.92),
+    };
+  }
+  function ppsFor(cfg, W) {
+    const spacing = Math.max(clamp(W * 0.22, 96, 200), cfg.sub * 30);
+    return (spacing * cfg.bpm) / 60;
+  }
+  const fadeAlpha = (G, x) => (x >= G.playX ? 1 : clamp(0.22 + (0.78 * (x - G.clefW)) / (G.playX - G.clefW), 0.08, 1));
+
+  /* =============================== Lane drawing =============================== */
+  function drawLane(vt) {
+    const f = fitCanvas(el.lane); if (!f) return;
+    const { g, W, H } = f;
+    g.clearRect(0, 0, W, H);
+    const live = !!(S && vt != null);
+    const o = live ? S : preview; if (!o) return;
+    const cfg = o.cfg, G = laneGeo(W, H), u = G.u;
+    const pps = live ? S.pps : ppsFor(cfg, W);
+    const t = live ? vt : o.viewT;
+    const X = (tt) => G.playX + (tt - t) * pps;
+    const tMin = t - (G.playX - G.clefW + 40) / pps, tMax = t + (W - G.playX + 40) / pps;
+    const now = performance.now();
+    const ev = o.events;
+    if (live) while (S.drawFrom < ev.length - 1 && ev[S.drawFrom].t < tMin - 1.5) S.drawFrom++;
+    const from = live ? S.drawFrom : Math.max(0, lowerBound(ev, tMin - 1.5, 't'));
+    const w = live ? curWindows(S) : (ev.find((e) => e.scorable) || { w: windowsFor(DIFF[cfg.diff], 60 / cfg.bpm / cfg.sub) }).w;
+    const hideNotes = live && S.mode === 'calib';
+
+    // target window around the playhead: the wide wash is "Khá", the inner one "Hoàn hảo"
+    g.fillStyle = hexA(C.accent, 0.06);
+    g.fillRect(G.playX - w.ok * pps, G.bandTop, 2 * w.ok * pps, G.bandBot - G.bandTop);
+    g.fillStyle = hexA(C.accent, 0.11);
+    g.fillRect(G.playX - w.perfect * pps, G.bandTop, 2 * w.perfect * pps, G.bandBot - G.bandTop);
+
+    // staff line, dashed through silent bars
+    const gapOf = (bar) => clamp(0.3 * bar.interval * pps, G.rx + 5, 20);
+    const spans = [];
+    for (const bar of o.bars) {
+      if (bar.end < tMin) continue;
+      if (bar.t > tMax) break;
+      if (!bar.isCount && !bar.audible) spans.push([X(bar.t) - gapOf(bar), X(bar.end) - gapOf(bar)]);
+    }
+    g.strokeStyle = C.staff; g.lineWidth = 1.5;
+    g.beginPath();
+    let cur = G.clefW - 6;
+    for (const [a, b] of spans) { if (a > cur) { g.moveTo(cur, G.staffY); g.lineTo(a, G.staffY); } cur = Math.max(cur, b); }
+    if (cur < W) { g.moveTo(cur, G.staffY); g.lineTo(W, G.staffY); }
+    g.stroke();
+    if (spans.length) {
+      g.setLineDash([3, 5]);
+      g.beginPath();
+      for (const [a, b] of spans) { g.moveTo(Math.max(a, G.clefW), G.staffY); g.lineTo(b, G.staffY); }
+      g.stroke();
+      g.setLineDash([]);
+      g.fillStyle = C.muted; g.font = `italic 500 ${Math.round(12 * u)}px ${FONT_BODY}`;
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      for (const [a, b] of spans) {
+        const x1 = Math.max(a, G.clefW), x2 = Math.min(b, W);
+        if (x2 - x1 > 110) { const cx = (x1 + x2) / 2; g.globalAlpha = fadeAlpha(G, cx); g.fillText('click tắt · giữ nhịp', cx, G.staffY - 26 * u); }
+      }
+      g.globalAlpha = 1;
+    }
+    g.fillStyle = hexA(C.staff, 0.45);
+    g.fillRect(G.clefW, G.tapY - 0.5, W - G.clefW, 1);
+
+    // bar lines and numbers
+    g.font = `500 ${Math.round(10 * u + 1)}px ${FONT_DATA}`; g.textAlign = 'left'; g.textBaseline = 'middle';
+    for (const bar of o.bars) {
+      if (bar.end < tMin) continue;
+      if (bar.t > tMax + 1) break;
+      if (bar.isCount || !bar.audible || hideNotes) continue;
+      const x = Math.round(X(bar.t) - gapOf(bar)) + 0.5;
+      if (x < G.clefW - 4 || x > W + 4) continue;
+      const a = fadeAlpha(G, x);
+      g.globalAlpha = a * 0.55; g.fillStyle = C.ink;
+      g.fillRect(x - 0.7, G.staffY - 24 * u, 1.4, 48 * u);
+      g.globalAlpha = a; g.fillStyle = C.muted;
+      g.fillText(String(bar.b + 1), x + 4, G.bandTop - 8);
+    }
+    g.globalAlpha = 1;
+    if (!hideNotes && o.totalBars !== Infinity && o.genBar >= o.totalBars) {
+      const lb = o.bars[o.bars.length - 1];
+      const x = X(lb.end) - gapOf(lb);
+      if (x > G.clefW && x < W + 10) {
+        g.globalAlpha = fadeAlpha(G, x); g.fillStyle = C.ink;
+        g.fillRect(x - 7, G.staffY - 24 * u, 1.5, 48 * u);
+        g.fillRect(x - 3.5, G.staffY - 24 * u, 4.5, 48 * u);
+        g.globalAlpha = 1;
+      }
+    }
+
+    // notes
+    for (let i = from; i < ev.length && !hideNotes; i++) {
+      const e = ev[i];
+      if (e.t > tMax) break;
+      if (!e.scorable || e.j !== 0) continue;
+      drawGroup(g, G, ev, i, X, now);
+    }
+
+    // where each tap landed
+    if (live && !hideNotes) {
+      const taps = S.taps;
+      while (S.tapFrom < taps.length && taps[S.tapFrom].t < tMin - 1) S.tapFrom++;
+      for (let k = S.tapFrom; k < taps.length; k++) {
+        const tp = taps[k], x = X(tp.t);
+        if (x < G.clefW - 4 || x > W + 4) continue;
+        g.globalAlpha = fadeAlpha(G, x);
+        if (tp.r === 'extra') {
+          g.strokeStyle = J.miss; g.lineWidth = 1.6;
+          g.beginPath(); g.arc(x, G.tapY, 3.6 * u, 0, Math.PI * 2); g.stroke();
+        } else {
+          g.fillStyle = J[tp.r]; g.fillRect(x - 1, G.tapY - 7 * u, 2, 14 * u);
+        }
+      }
+      g.globalAlpha = 1;
+    }
+
+    // playhead (the target)
+    g.fillStyle = C.accent;
+    g.fillRect(G.playX - 1, G.bandTop, 2, G.bandBot - G.bandTop);
+    g.beginPath(); g.moveTo(G.playX - 5, G.bandTop - 8); g.lineTo(G.playX + 5, G.bandTop - 8); g.lineTo(G.playX, G.bandTop - 1); g.closePath(); g.fill();
+    if (live && S.flash) {
+      const age = now - S.flash.at;
+      if (age < 280) {
+        const p = age / 280;
+        g.fillStyle = hexA(J[S.flash.r], 0.35 * (1 - p));
+        g.beginPath(); g.ellipse(G.playX, G.staffY, G.rx + 6, G.ry + 6, -0.35, 0, Math.PI * 2); g.fill();
+        if (!reducedMotion) {
+          g.strokeStyle = hexA(J[S.flash.r], 1 - p); g.lineWidth = 2;
+          g.beginPath(); g.ellipse(G.playX, G.staffY, G.rx + 5 + p * 12, G.ry + 5 + p * 12, -0.35, 0, Math.PI * 2); g.stroke();
+        }
+      }
+    }
+    g.strokeStyle = C.accent; g.lineWidth = 2;
+    g.beginPath(); g.ellipse(G.playX, G.staffY, G.rx + 5, G.ry + 5, -0.35, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = C.accent; g.font = `600 ${Math.round(9.5 * u + 0.5)}px ${FONT_BODY}`;
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillText('ĐÍCH', G.playX, H - 5);
+
+    // clef + time signature, with past notes fading under it
+    const mw = G.clefW + 36;
+    const grad = g.createLinearGradient(0, 0, mw, 0);
+    grad.addColorStop(0, C.lane); grad.addColorStop(G.clefW / mw, C.lane); grad.addColorStop(1, hexA(C.lane, 0));
+    g.fillStyle = grad; g.fillRect(0, 0, mw, H);
+    g.fillStyle = C.staff; g.fillRect(6, G.staffY - 0.75, G.clefW - 6, 1.5);
+    g.fillStyle = C.ink;
+    g.fillRect(10, G.staffY - 11 * u, 3.2, 22 * u);
+    g.fillRect(16.4, G.staffY - 11 * u, 3.2, 22 * u);
+    g.font = `700 ${Math.round(19 * u)}px ${FONT_DISPLAY}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(String(cfg.beats), 37, G.staffY - 11 * u);
+    g.fillText('4', 37, G.staffY + 11.5 * u);
+
+    // judgement popup
+    if (live && S.popup) {
+      const age = now - S.popup.at;
+      if (age < 760) {
+        const a = age < 500 ? 1 : 1 - (age - 500) / 260;
+        const rise = reducedMotion ? 1 : Math.min(1, age / 140);
+        const x = G.playX + 14, y = G.popY + (1 - rise) * 6;
+        g.globalAlpha = Math.max(0, a);
+        const mainFont = `700 ${Math.round(15 * u)}px ${FONT_DISPLAY}`, subFont = `600 ${Math.round(11.5 * u)}px ${FONT_DATA}`;
+        g.font = mainFont; const tw = g.measureText(S.popup.text).width;
+        g.font = subFont; const sw = S.popup.sub ? g.measureText(S.popup.sub).width + 8 : 0;
+        g.fillStyle = hexA(C.lane, 0.92);
+        roundRectPath(g, x - 7, y - 11 * u, tw + sw + 14, 22 * u, 6); g.fill();
+        g.textAlign = 'left'; g.textBaseline = 'middle';
+        g.font = mainFont; g.fillStyle = JT[S.popup.r]; g.fillText(S.popup.text, x, y + 0.5);
+        if (S.popup.sub) { g.font = subFont; g.fillStyle = C.ink2; g.fillText(S.popup.sub, x + tw + 8, y + 0.5); }
+        g.globalAlpha = 1;
+      }
+    }
+  }
+  function drawGroup(g, G, ev, i0, X, now) {
+    const first = ev[i0], n = Math.min(first.sub, ev.length - i0);
+    const xs = new Array(n);
+    for (let k = 0; k < n; k++) xs[k] = X(ev[i0 + k].t);
+    if (xs[n - 1] < G.clefW - 30) return;
+    const u = G.u, top = G.staffY - G.stem, sxOff = G.rx * 0.86;
+    if (!first.hidden) {
+      g.globalAlpha = fadeAlpha(G, (xs[0] + xs[n - 1]) / 2);
+      g.fillStyle = C.ink;
+      for (let k = 0; k < n; k++) g.fillRect(xs[k] + sxOff - 0.8, top, 1.6, G.staffY - G.ry * 0.3 - top);
+      if (n >= 2) {
+        const x1 = xs[0] + sxOff - 0.8, x2 = xs[n - 1] + sxOff + 0.8;
+        g.fillRect(x1, top, x2 - x1, G.beamH);
+        if (n === 4) g.fillRect(x1, top + G.beamH + 2.8 * u, x2 - x1, G.beamH);
+        if (n === 3) {
+          g.font = `italic 600 ${Math.round(11 * u)}px ${FONT_DISPLAY}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+          g.fillText('3', (x1 + x2) / 2, top - 4 * u);
+        }
+      }
+      if (first.lvl === 'accent') {
+        const ax = xs[0] + sxOff, ay = top - 11 * u;
+        g.strokeStyle = C.ink; g.lineWidth = 1.6;
+        g.beginPath(); g.moveTo(ax - 5 * u, ay - 3.5 * u); g.lineTo(ax + 5 * u, ay); g.lineTo(ax - 5 * u, ay + 3.5 * u); g.stroke();
+      }
+    }
+    for (let k = 0; k < n; k++) {
+      const e = ev[i0 + k];
+      if (first.hidden && !e.judged) continue;
+      const x = xs[k];
+      g.globalAlpha = fadeAlpha(G, x);
+      if (e.judged && e.r === 'miss' && e.off === null) {
+        const r = G.rx * 0.8;
+        g.strokeStyle = J.miss; g.lineWidth = 2; g.lineCap = 'round';
+        g.beginPath();
+        g.moveTo(x - r, G.staffY - r * 0.75); g.lineTo(x + r, G.staffY + r * 0.75);
+        g.moveTo(x - r, G.staffY + r * 0.75); g.lineTo(x + r, G.staffY - r * 0.75);
+        g.stroke(); g.lineCap = 'butt';
+        continue;
+      }
+      const pop = e.judged && !reducedMotion ? 1 + 0.45 * Math.max(0, 1 - (now - e.jt) / 180) : 1;
+      g.fillStyle = e.judged ? J[e.r] : C.ink;
+      g.beginPath(); g.ellipse(x, G.staffY, G.rx * pop, G.ry * pop, -0.35, 0, Math.PI * 2); g.fill();
+    }
+    g.globalAlpha = 1;
+  }
+
+  /* =============================== Timing meter =============================== */
+  function drawMeter() {
+    const f = fitCanvas(el.meter); if (!f) return;
+    const { g, W } = f;
+    g.clearRect(0, 0, W, f.H);
+    const s = S;
+    const w = s ? curWindows(s) : windowsFor(DIFF[settings.diff], 60 / effBpm() / settings.sub);
+    const R = Math.max(w.ok * 1.45, 0.05);
+    const top = 7, th = 20, cx = W / 2, half = W / 2 - 3;
+    const sx = (off) => cx + clamp(off / R, -1, 1) * half;
+    g.save();
+    roundRectPath(g, 1, top, W - 2, th, 6); g.clip();
+    g.fillStyle = C.track; g.fillRect(0, top, W, th);
+    const zone = (a, b, col, al) => { const x1 = sx(a), x2 = sx(b); g.fillStyle = hexA(col, al); g.fillRect(Math.min(x1, x2), top, Math.abs(x2 - x1), th); };
+    zone(-R, -w.ok, J.miss, 0.16); zone(w.ok, R, J.miss, 0.16);
+    zone(-w.ok, -w.good, J.ok, 0.24); zone(w.good, w.ok, J.ok, 0.24);
+    zone(-w.good, -w.perfect, J.good, 0.24); zone(w.perfect, w.good, J.good, 0.24);
+    zone(-w.perfect, w.perfect, J.perfect, 0.28);
+    g.restore();
+    g.fillStyle = C.ink; g.fillRect(cx - 1, top - 3, 2, th + 6);
+    g.font = `500 10px ${FONT_DATA}`; g.fillStyle = C.muted; g.textAlign = 'center'; g.textBaseline = 'top';
+    const ly = top + th + 9;
+    for (const v of [-w.ok, -w.good, w.good, w.ok]) { const ms = Math.round(v * 1000); g.fillText((ms > 0 ? '+' : '−') + Math.abs(ms), sx(v), ly); }
+    g.fillText('0', cx, ly);
+    if (s && s.recent.length) {
+      const now = performance.now(), n = s.recent.length;
+      for (let k = 0; k < n; k++) {
+        const it = s.recent[k], age = now - it.at;
+        if (age > 10000) continue;
+        const x = sx(it.off);
+        g.fillStyle = J[it.r];
+        if (k === n - 1) {
+          g.globalAlpha = 1;
+          g.fillRect(x - 1.5, top - 3, 3, th + 6);
+          g.beginPath(); g.moveTo(x - 5, top - 7); g.lineTo(x + 5, top - 7); g.lineTo(x, top - 1); g.closePath(); g.fill();
+        } else {
+          g.globalAlpha = (0.2 + (0.7 * (k + 1)) / n) * (1 - age / 10000);
+          g.fillRect(x - 1, top + 2, 2, th - 4);
+        }
+      }
+      g.globalAlpha = 1;
+      const last = s.recent.slice(-12);
+      if (last.length >= 3) {
+        const x = sx(avg(last.map((it) => it.off)));
+        g.fillStyle = C.ink;
+        g.beginPath(); g.moveTo(x, top + th + 1); g.lineTo(x + 5, top + th + 7); g.lineTo(x - 5, top + th + 7); g.closePath(); g.fill();
+      }
+    }
+  }
+
+  /* =============================== HUD =============================== */
+  function buildLeds(n) {
+    if (el.leds.dataset.n === String(n)) return;
+    el.leds.textContent = '';
+    for (let k = 0; k < n; k++) { const d = document.createElement('span'); d.className = 'led' + (k === 0 ? ' down' : ''); el.leds.appendChild(d); }
+    el.leds.dataset.n = String(n); ledKey = '';
+  }
+  function setLeds(lit, flash) {
+    const key = lit + ':' + (flash ? 1 : 0);
+    if (key === ledKey) return; ledKey = key;
+    const kids = el.leds.children;
+    for (let k = 0; k < kids.length; k++) { kids[k].classList.toggle('on', k === lit); kids[k].classList.toggle('flash', k === lit && flash); }
+  }
+  function updatePendulum(be, vt) {
+    let deg;
+    if (S && be) {
+      if (be.hidden) deg = 0;
+      else { const frac = clamp((vt - be.t) / be.beatDur, 0, 1); deg = 24 * (be.gb % 2 ? 1 : -1) * Math.cos(Math.PI * frac); }
+    } else if (S) deg = S.mode === 'calib' ? -16 : -24;
+    else if (!reducedMotion && phase !== 'starting') {
+      const bd = 60 / effBpm(), ph = performance.now() / 1000 / bd, k = Math.floor(ph);
+      deg = 24 * (k % 2 ? 1 : -1) * Math.cos(Math.PI * (ph - k));
+    } else deg = -16;
+    const key = deg.toFixed(1);
+    if (key !== pendKey) { pendKey = key; el.pdArm.setAttribute('transform', `rotate(${key} 16 38)`); }
+  }
+  function showCountdown(n) {
+    if (n == null) { if (!el.countdown.hidden) el.countdown.hidden = true; countKey = null; return; }
+    if (countKey === n) return;
+    countKey = n;
+    el.countNum.textContent = String(n);
+    el.countdown.hidden = false;
+    el.countdown.classList.remove('pop'); void el.countdown.offsetWidth; el.countdown.classList.add('pop');
+  }
+  function updateCountdownPos() {
+    const W = laneW(), H = (sizes.get(el.lane) || {}).h || 180;
+    const G = laneGeo(W, H);
+    el.countdown.style.left = Math.round((G.clefW + G.playX) / 2 + 6) + 'px';
+  }
+  function showCalib(on) {
+    el.calib.hidden = !on;
+    if (on) { setText(el.calibCount, '0'); setText(el.calibMed, '—'); }
+  }
+  function updateCalibOverlay() {
+    const s = S; if (!s) return;
+    setText(el.calibCount, String(s.calibOffs.length));
+    setText(el.calibMed, s.calibOffs.length >= 3 ? fmtMs(median(s.calibOffs) * 1000) : '—');
+  }
+  function setCalibMsg(msg, kind) { el.calibMsg.hidden = false; el.calibMsg.textContent = msg; el.calibMsg.className = 'hint ' + (kind || ''); }
+  function accClass(acc, target) {
+    if (acc == null) return '';
+    return acc >= 95 ? 'r-perfect' : acc >= target ? 'r-good' : acc >= target - 15 ? 'r-ok' : 'r-miss';
+  }
+  function setSeg(sg, cls, wpct, title) {
+    if (sg.cls !== cls) { sg.d.className = cls; sg.cls = cls; }
+    if (sg.w !== wpct) { sg.i.style.width = wpct + '%'; sg.w = wpct; }
+    if (title !== undefined && sg.title !== title) { sg.d.title = title; sg.title = title; }
+  }
+  function buildSegments(n) {
+    el.progress.textContent = '';
+    segs = [];
+    for (let k = 0; k < n; k++) {
+      const d = document.createElement('div'); const i = document.createElement('i');
+      d.className = 'seg'; d.appendChild(i); el.progress.appendChild(d);
+      segs.push({ d, i, cls: 'seg', w: 0, title: '' });
+    }
+  }
+  function idleProgress() {
+    const o = preview; if (!o) return;
+    const c = o.cfg;
+    if (o.song) {
+      const p = o.song.plan;
+      setText(el.progLabel, `${p.bars} ô · ${fmtTime(p.end - p.start)} · từ ${fmtTime(p.start)}`);
+      segs.forEach((sg, k) => setSeg(sg, 'seg', 0, `Ô ${k + 1}`));
+      return;
+    }
+    const finite = c.length > 0, n = finite ? c.length : 16;
+    let dur = 0;
+    for (let b = 0; b < n; b++) dur += (c.beats * 60) / bpmForBar(c, b);
+    setText(el.progLabel, finite ? `${c.length} ô · ${fmtTime(dur)}` : `Không giới hạn · ${fmtTime(dur)} mỗi 16 ô`);
+    segs.forEach((sg, k) => setSeg(sg, 'seg' + (barAudible(c, k) ? '' : ' silent'), 0, `Ô ${k + 1}${barAudible(c, k) ? '' : ' (click tắt)'}`));
+  }
+  function updateProgress(s, vt) {
+    const bars = s.bars;
+    while (s.curBar + 1 < bars.length && bars[s.curBar + 1].t <= vt) s.curBar++;
+    const bar = bars[s.curBar];
+    const cb = bar && !bar.isCount && bar.t <= vt ? bar.b : -1;
+    const frac = cb >= 0 ? clamp((vt - bar.t) / (bar.end - bar.t), 0, 1) : 0;
+    const finite = s.totalBars !== Infinity;
+    const base = s.cfg.length === 0 ? Math.floor(Math.max(cb, 0) / 16) * 16 : 0;
+    for (let k = 0; k < segs.length; k++) {
+      const bi = base + k;
+      let cls = 'seg' + (barAudible(s.cfg, bi) ? '' : ' silent');
+      let wpct = 0, title = `Ô ${bi + 1}`;
+      if (finite && bi >= s.totalBars) { setSeg(segs[k], 'seg', 0, title); continue; }
+      if (cb >= 0 && bi < cb) {
+        const st = s.barStats[bi];
+        const acc = st && st.n ? (st.pts / st.n) * 100 : null;
+        const ac = accClass(acc, s.cfg.target);
+        if (ac) cls += ' ' + ac;
+        title += `: ${fmtPct(acc)}`;
+      } else if (bi === cb) { cls += ' cur'; wpct = Math.round(frac * 1000) / 10; }
+      setSeg(segs[k], cls, wpct, title);
+    }
+    const elapsed = Math.max(0, vt - s.firstT);
+    let label;
+    if (s.mode === 'calib') label = 'Đang đo độ trễ…';
+    else if (cb < 0) label = 'Đếm vào…';
+    else label = finite ? `Ô ${cb + 1}/${s.totalBars} · ${fmtTime(elapsed)} / ${fmtTime(s.total)}` : `Ô ${cb + 1} · ${fmtTime(elapsed)}`;
+    setText(el.progLabel, label);
+  }
+  function renderScore() {
+    const s = S;
+    const acc = s && s.n ? (s.pts / s.n) * 100 : null;
+    const target = s ? s.cfg.target : settings.target;
+    setText(el.score, s ? nf0.format(s.score) : '0');
+    setText(el.combo, s ? String(s.combo) : '0');
+    setText(el.acc, fmtPct(acc));
+    el.accFill.style.width = (acc == null ? 0 : clamp(acc, 0, 100)) + '%';
+    el.targetBar.classList.toggle('pass', acc != null && acc >= target);
+    el.targetMark.style.left = target + '%';
+    setText(el.accLabel, `${fmtPct(acc)} · mục tiêu ${target}%`);
+    setText(el.lastOff, s && s.lastOff != null ? describeOff(s.lastOff * 1000) : '—');
+    const last = s ? s.recent.slice(-12) : [];
+    setText(el.avgOff, last.length >= 3 ? describeOff(avg(last.map((x) => x.off)) * 1000) : '—');
+  }
+  function updateHud(vt) {
+    const s = S;
+    let be = null;
+    if (s && vt != null) {
+      const ev = s.events;
+      while (s.ledIdx + 1 < ev.length && ev[s.ledIdx + 1].t <= vt) s.ledIdx++;
+      const e = ev[s.ledIdx];
+      be = e ? ev[e.i - e.j] : null;
+      if (be && be.t > vt) be = null;
+    }
+    const calib = !!(s && s.mode === 'calib');
+    if (be && !calib) setLeds(be.hidden ? -1 : be.beat, vt - be.t < 0.1); else setLeds(-1, false);
+    updatePendulum(calib ? null : be, vt);
+    const bpmNow = s ? (s.song || !be ? s.cfg.bpm : Math.round(60 / be.beatDur)) : effBpm();
+    setText(el.bpmNum, String(bpmNow));
+    setText(el.tempoName, tempoName(bpmNow));
+    if (s && be && !be.scorable && phase !== 'calib' && vt < s.firstT - 0.02) showCountdown(be.gb + 1); else showCountdown(null);
+    if (s && vt != null) updateProgress(s, vt);
+    if (hudDirty) { hudDirty = false; renderScore(); }
+  }
+  function setStartBtn() {
+    const busy = busyNow();
+    el.startBtn.innerHTML = busy ? 'Dừng <kbd>Esc</kbd>' : 'Bắt đầu';
+    el.startBtn.classList.toggle('is-stop', busy);
+  }
+  function applyLocks() {
+    const busy = busyNow(), songSrc = effSource() === 'song';
+    el.fsSource.disabled = busy;
+    el.srcSong.disabled = !SONG;
+    el.fsTempo.disabled = busy || songSrc;
+    el.fsMeter.disabled = busy;
+    el.fsExercise.disabled = busy;
+    el.gapIn.disabled = songSrc;
+    el.rampIn.disabled = songSrc;
+    el.fsSound.disabled = busy;
+    el.fsLatency.disabled = busy;
+    el.bpmUp.disabled = el.bpmDown.disabled = busy || songSrc;
+    el.songFile.disabled = busy;
+    el.songDrop.classList.toggle('busy', busy);
+    for (const b of [el.songPracticeBtn, el.songUseBpmBtn, el.dbPrev, el.dbNext, el.songPlayBtn]) b.disabled = busy || !SONG;
+    for (const b of el.songAlts.querySelectorAll('button')) b.disabled = busy;
+  }
+  function pulsePad() {
+    el.tapPad.classList.add('hit');
+    clearTimeout(padTimer);
+    padTimer = setTimeout(() => el.tapPad.classList.remove('hit'), 90);
+  }
+  function toast(msg) {
+    el.toast.textContent = msg; el.toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.toast.hidden = true; }, 3600);
+  }
+  function announce(msg) { el.announcer.textContent = ''; setTimeout(() => { el.announcer.textContent = msg; }, 30); }
+
+  /* =============================== Frame loop =============================== */
+  function frame() {
+    requestAnimationFrame(frame);
+    let vt = null;
+    if (isActive() && S && A.ctx) {
+      sampleClock();
+      vt = perfToHeard(performance.now()) - S.cal;
+      update(vt);
+    }
+    const live = isActive() && S;
+    if (live || laneDirty) { drawLane(live ? vt : null); laneDirty = false; }
+    if (live || meterDirty) { drawMeter(); meterDirty = false; }
+    updateHud(live ? vt : null);
+    if (SONG && !el.songBody.hidden) {
+      const playing = !!aud || !!(live && S.song);
+      if (playing || songDirty) { drawSongViews(songDirty); songDirty = false; }
+    }
+  }
+
+  /* =============================== Results =============================== */
+  const gradeOf = (acc) => (acc >= 95 ? 'S' : acc >= 90 ? 'A' : acc >= 80 ? 'B' : acc >= 70 ? 'C' : 'D');
+  function computeResult(s, aborted) {
+    const c = s.cfg;
+    const hits = s.hits.slice().sort((a, b) => a.t - b.t);
+    let lastBar = -1;
+    s.barStats.forEach((b, i) => { if (b && b.n) lastBar = i; });
+    lastBar = Math.max(0, lastBar);
+    const used = hits.filter((h) => h.bar <= lastBar);
+    const offs = used.filter((h) => h.off !== null).map((h) => h.off * 1000);
+    const acc = s.n ? (s.pts / s.n) * 100 : 0;
+    const barObjs = s.bars.filter((b) => !b.isCount && b.b <= lastBar);
+    const lastObj = barObjs[barObjs.length - 1];
+    let drift = null;
+    if (offs.length >= 12) { const h = Math.floor(offs.length / 2); drift = avg(offs.slice(h)) - avg(offs.slice(0, h)); }
+    let silentAcc = null, loudAcc = null;
+    if (GAPS[c.gap]) {
+      let sp = 0, sn = 0, lp = 0, ln = 0;
+      s.barStats.forEach((b) => { if (!b) return; if (b.audible) { lp += b.pts; ln += b.n; } else { sp += b.pts; sn += b.n; } });
+      silentAcc = sn ? (sp / sn) * 100 : null; loudAcc = ln ? (lp / ln) * 100 : null;
+    }
+    const stoppedEarly = aborted && s.cfg.length > 0 && lastBar + 1 < s.totalBars;
+    const w = s.firstEv.w;
+    return {
+      at: Date.now(), song: s.song ? s.song.name : null,
+      cfg: { bpm: c.bpm, beats: c.beats, sub: c.sub, length: c.length, diff: c.diff, gap: c.gap, ramp: c.ramp, target: c.target },
+      bpmEnd: bpmForBar(c, lastBar), barsPlayed: lastBar + 1, totalBars: s.totalBars === Infinity ? null : s.totalBars, stoppedEarly,
+      acc, grade: gradeOf(acc), pass: !stoppedEarly && acc >= c.target,
+      counts: Object.assign({}, s.counts), maxCombo: s.maxCombo, score: s.score,
+      mean: offs.length ? avg(offs) : null, sd: offs.length > 1 ? stdev(offs) : null, drift, silentAcc, loudAcc,
+      win: { perfect: w.perfect * 1000, good: w.good * 1000, ok: w.ok * 1000 },
+      span: lastObj ? lastObj.end - s.firstT : 1,
+      hits: used.map((h) => ({ t: h.t - s.firstT, off: h.off === null ? null : Math.round(h.off * 10000) / 10, r: h.r, bar: h.bar, beat: h.beat, j: h.j, sub: h.sub, silent: h.silent })),
+      barStarts: barObjs.map((b) => ({ b: b.b, t: b.t - s.firstT })),
+      silent: barObjs.filter((b) => !b.audible).map((b) => [b.t - s.firstT, b.end - s.firstT]),
+      bars: barObjs.map((b) => {
+        const st = s.barStats[b.b];
+        return { b: b.b, bpm: Math.round(b.bpm), audible: b.audible, n: st.n, acc: st.n ? (st.pts / st.n) * 100 : null, mean: st.offs.length ? avg(st.offs) * 1000 : null, miss: st.miss };
+      }),
+    };
+  }
+  function metaLine(res) {
+    const c = res.cfg;
+    const parts = [];
+    if (res.song) parts.push(`♪ ${shortName(res.song, 32)}`);
+    parts.push(res.song ? `khoảng ${c.bpm} BPM` : res.bpmEnd !== c.bpm ? `${c.bpm}→${res.bpmEnd} BPM` : `${c.bpm} BPM`);
+    parts.push(`${c.beats}/4`, SUB_NAME[c.sub]);
+    const total = res.totalBars || c.length;
+    parts.push(total ? `${res.barsPlayed}/${total} ô` : `${res.barsPlayed} ô`);
+    parts.push(`độ khó ${DIFF[c.diff].name.toLowerCase()}`);
+    if (!res.song && GAPS[c.gap]) parts.push(`click ${GAPS[c.gap][0]} ô có, ${GAPS[c.gap][1]} ô im`);
+    return parts.join(' · ');
+  }
+  function tipsFor(res) {
+    const t = [], m = res.mean, sdv = res.sd;
+    if (m != null && m <= -8) t.push(`Bạn có xu hướng gõ sớm khoảng ${Math.round(-m)} ms. Thả lỏng tay, chờ ${res.song ? 'beat của bài' : 'tiếng click'} rồi gõ trùng với nó.`);
+    else if (m != null && m >= 8) t.push(`Bạn có xu hướng gõ muộn khoảng ${Math.round(m)} ms. Đếm thầm trước mỗi phách để gõ chủ động thay vì phản xạ theo ${res.song ? 'nhạc' : 'tiếng click'}.`);
+    if (res.drift != null && Math.abs(res.drift) >= 10) {
+      t.push(res.drift < 0
+        ? `Nửa sau bài bạn gõ sớm hơn nửa đầu ${Math.round(-res.drift)} ms, dấu hiệu bị nhanh dần (rushing).`
+        : `Nửa sau bài bạn gõ muộn hơn nửa đầu ${Math.round(res.drift)} ms, dấu hiệu bị chậm dần (dragging).`);
+    }
+    if (res.silentAcc != null && res.loudAcc != null && res.loudAcc - res.silentAcc >= 8) {
+      t.push(`Ở các ô im, độ chính xác còn ${fmtPct(res.silentAcc)} so với ${fmtPct(res.loudAcc)} khi có click. Đếm thầm "1 2 3 4" trong các ô im.`);
+    }
+    if (sdv != null && sdv > res.win.good * 0.9) t.push(`Độ dao động ±${Math.round(sdv)} ms còn lớn. ${res.song ? 'Bật Kèm click theo beat để có điểm tựa' : 'Hạ tempo khoảng 10%'} để luyện độ đều trước.`);
+    if (res.counts.extra >= 3) t.push(`Có ${res.counts.extra} lần gõ thừa. Mỗi nốt chỉ gõ một lần.`);
+    if (!t.length) t.push(res.pass ? (res.song ? 'Nhịp rất chắc. Thử tắt click theo beat, hoặc chuyển sang gõ móc đơn.' : 'Nhịp rất chắc. Thử tăng tempo hoặc bật click ngắt quãng để nâng độ khó.') : 'Thử lại và tập trung gõ trùng beat, đừng nhìn nốt mà hãy nghe.');
+    return t.slice(0, 3);
+  }
+  function nextBpmFor(res) {
+    const b = res.cfg.bpm;
+    if (res.song) return b;
+    if (res.pass && res.acc >= 93) return Math.min(BPM_MAX, b + 5);
+    if (!res.pass && !res.stoppedEarly) return Math.max(BPM_MIN, b - 5);
+    return b;
+  }
+  function showResults(res) {
+    lastResult = res; phase = 'results'; resultsAt = performance.now();
+    el.results.dataset.state = res.stoppedEarly ? 'stopped' : res.pass ? 'pass' : 'fail';
+    el.resGrade.textContent = res.grade;
+    el.resVerdict.textContent = res.stoppedEarly ? 'Đã dừng giữa chừng' : res.pass ? 'Đạt mục tiêu' : 'Chưa đạt mục tiêu';
+    el.resAcc.textContent = fmtPct(res.acc);
+    el.resTarget.textContent = res.cfg.target + '%';
+    el.resMeta.textContent = metaLine(res);
+
+    el.resStats.textContent = '';
+    const stat = (label, value, key) => {
+      const d = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd');
+      if (key) { const dot = document.createElement('span'); dot.className = 'dot' + (key === 'extra' ? ' ring' : ''); if (key !== 'extra') dot.style.background = `var(--j-${key})`; dt.appendChild(dot); }
+      dt.appendChild(document.createTextNode(label));
+      dd.textContent = String(value);
+      d.append(dt, dd); el.resStats.appendChild(d);
+    };
+    stat('Hoàn hảo', res.counts.perfect, 'perfect');
+    stat('Tốt', res.counts.good, 'good');
+    stat('Khá', res.counts.ok, 'ok');
+    stat('Trượt', res.counts.miss, 'miss');
+    stat('Gõ thừa', res.counts.extra, 'extra');
+    stat('Combo dài nhất', res.maxCombo);
+    stat('Lệch trung bình', res.mean == null ? '—' : describeOff(res.mean));
+    stat('Độ dao động', res.sd == null ? '—' : '±' + Math.round(res.sd) + ' ms');
+    stat('Điểm', nf0.format(res.score));
+
+    el.resLegend.textContent = '';
+    const li = (label, kind) => {
+      const l = document.createElement('li'), k = document.createElement('span');
+      if (kind === 'line') k.className = 'ln';
+      else if (kind === 'silent') k.className = 'sw';
+      else { k.className = 'dot'; k.style.background = `var(--j-${kind})`; }
+      l.append(k, document.createTextNode(label)); el.resLegend.appendChild(l);
+    };
+    li('Hoàn hảo', 'perfect'); li('Tốt', 'good'); li('Khá', 'ok'); li('Trượt', 'miss'); li('Xu hướng (TB 9 nốt)', 'line');
+    if (res.silent.length) li('Ô im', 'silent');
+
+    el.resBars.textContent = '';
+    for (const b of res.bars) {
+      const d = document.createElement('div');
+      d.className = ['seg', b.audible ? '' : 'silent', accClass(b.acc, res.cfg.target)].filter(Boolean).join(' ');
+      d.title = `Ô ${b.b + 1}: ${fmtPct(b.acc)}${b.audible ? '' : ' (ô im)'}`;
+      el.resBars.appendChild(d);
+    }
+    const passBars = res.bars.filter((b) => b.acc != null && b.acc >= res.cfg.target).length;
+    el.resBarsNote.textContent = `${passBars}/${res.bars.length} ô đạt mục tiêu`;
+
+    el.resTips.textContent = '';
+    for (const tip of tipsFor(res)) { const l = document.createElement('li'); l.textContent = tip; el.resTips.appendChild(l); }
+
+    renderResultTable(res);
+
+    const nb = nextBpmFor(res);
+    el.nextBtn.hidden = nb === res.cfg.bpm;
+    el.nextBtn.textContent = `Thử ${nb} BPM`;
+    el.nextBtn.dataset.bpm = String(nb);
+
+    chartSel = null; hideTip();
+    el.stage.classList.add('show-results');
+    el.results.hidden = false;
+    requestAnimationFrame(drawResultChart);
+    try { el.results.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+    const r = el.stage.getBoundingClientRect();
+    if (r.top < 0) el.stage.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+    announce(`${el.resVerdict.textContent}. Độ chính xác ${fmtPct(res.acc)}, hạng ${res.grade}.`);
+  }
+  function closeResults() {
+    el.results.hidden = true;
+    el.stage.classList.remove('show-results');
+    hideTip();
+    if (phase === 'results') phase = 'idle';
+    toIdle();
+  }
+  function renderResultTable(res) {
+    const tbl = el.resTable; tbl.textContent = '';
+    const thead = document.createElement('thead'), hr = document.createElement('tr');
+    for (const [h, num] of [['Ô', false], ['Tempo', true], ['Click', false], ['Chính xác', true], ['Lệch TB', true], ['Trượt', true]]) {
+      const th = document.createElement('th'); th.textContent = h; if (num) th.className = 'num'; hr.appendChild(th);
+    }
+    thead.appendChild(hr); tbl.appendChild(thead);
+    const tb = document.createElement('tbody');
+    for (const b of res.bars) {
+      const tr = document.createElement('tr');
+      const cells = [[String(b.b + 1), false], [String(b.bpm), true], [b.audible ? 'có' : 'im', false], [fmtPct(b.acc), true], [b.mean == null ? '—' : fmtMs(b.mean), true], [String(b.miss), true]];
+      for (const [v, num] of cells) { const td = document.createElement('td'); td.textContent = v; if (num) td.className = 'num'; tr.appendChild(td); }
+      tb.appendChild(tr);
+    }
+    tbl.appendChild(tb);
+  }
+  function drawResultChart() {
+    const res = lastResult;
+    if (!res || el.results.hidden) return;
+    const f = fitCanvas(el.resChart); if (!f) return;
+    const { g, W, H } = f;
+    g.clearRect(0, 0, W, H);
+    const padL = 54, padR = 12, padT = 10, missRow = 28, padB = 22 + missRow;
+    const pw = Math.max(10, W - padL - padR), ph = Math.max(10, H - padT - padB);
+    const span = Math.max(res.span, 0.001);
+    const X = (t) => padL + clamp(t / span, 0, 1) * pw;
+    let need = res.win.ok * 1.25;
+    for (const h of res.hits) if (h.off != null) need = Math.max(need, Math.abs(h.off));
+    const ymax = [40, 60, 80, 100, 120, 160, 200, 240, 300].find((v) => v >= need) || 300;
+    const Y = (ms) => padT + ph / 2 - clamp(ms / ymax, -1, 1) * (ph / 2);
+    const missY = padT + ph + missRow * 0.58;
+
+    g.fillStyle = hexA(C.staff, 0.16);
+    for (const [a, b] of res.silent) g.fillRect(X(a), padT, Math.max(1, X(b) - X(a)), ph);
+    const band = (wv, col, al) => { const y1 = Y(wv), y2 = Y(-wv); g.fillStyle = hexA(col, al); g.fillRect(padL, y1, pw, y2 - y1); };
+    band(res.win.ok, J.ok, 0.09); band(res.win.good, J.good, 0.1); band(res.win.perfect, J.perfect, 0.12);
+
+    g.font = `500 10.5px ${FONT_DATA}`; g.textBaseline = 'middle'; g.textAlign = 'right';
+    for (const v of [-ymax, -ymax / 2, 0, ymax / 2, ymax]) {
+      const y = Math.round(Y(v)) + 0.5;
+      g.strokeStyle = v === 0 ? C.staff : C.line; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + pw, y); g.stroke();
+      g.fillStyle = C.muted;
+      g.fillText(v === 0 ? '0' : (v > 0 ? '+' : '−') + Math.abs(Math.round(v)), padL - 7, y);
+    }
+    g.textAlign = 'left'; g.font = `600 10px ${FONT_BODY}`; g.fillStyle = C.muted;
+    g.fillText('MUỘN', padL + 6, padT + 9);
+    g.fillText('SỚM', padL + 6, padT + ph - 9);
+    g.textAlign = 'right'; g.font = `500 10px ${FONT_BODY}`;
+    g.fillText('không gõ', padL - 7, missY);
+    g.fillStyle = C.line; g.fillRect(padL, padT + ph + missRow + 0.5, pw, 1);
+
+    g.textAlign = 'center'; g.textBaseline = 'top'; g.font = `500 10.5px ${FONT_DATA}`;
+    let lastX = -1e9;
+    for (const bs of res.barStarts) {
+      const x = X(bs.t);
+      if (x - lastX < 44) continue;
+      lastX = x;
+      g.fillStyle = C.line; g.fillRect(Math.round(x), padT + ph + missRow, 1, 5);
+      g.fillStyle = C.muted; g.fillText('Ô ' + (bs.b + 1), clamp(x, padL + 10, padL + pw - 10), padT + ph + missRow + 7);
+    }
+
+    const tapped = res.hits.filter((h) => h.off != null);
+    if (tapped.length >= 4) {
+      g.strokeStyle = C.ink2; g.lineWidth = 2; g.lineJoin = 'round'; g.lineCap = 'round';
+      g.beginPath();
+      for (let k = 0; k < tapped.length; k++) {
+        const lo = Math.max(0, k - 4), hi = Math.min(tapped.length - 1, k + 4);
+        let sum = 0; for (let q = lo; q <= hi; q++) sum += tapped[q].off;
+        const x = X(tapped[k].t), y = Y(sum / (hi - lo + 1));
+        if (k) g.lineTo(x, y); else g.moveTo(x, y);
+      }
+      g.stroke(); g.lineCap = 'butt';
+    }
+    chartPts = [];
+    for (const h of res.hits) {
+      const x = X(h.t);
+      if (h.off == null) {
+        const r = 3.4;
+        g.strokeStyle = J.miss; g.lineWidth = 1.8; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(x - r, missY - r); g.lineTo(x + r, missY + r); g.moveTo(x - r, missY + r); g.lineTo(x + r, missY - r); g.stroke();
+        g.lineCap = 'butt';
+        chartPts.push({ x, y: missY, h });
+        continue;
+      }
+      const y = Y(h.off);
+      g.fillStyle = C.screen; g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill();
+      g.fillStyle = J[h.r]; g.beginPath(); g.arc(x, y, 4, 0, Math.PI * 2); g.fill();
+      chartPts.push({ x, y, h });
+    }
+    if (chartSel != null && chartPts[chartSel]) {
+      const p = chartPts[chartSel];
+      g.strokeStyle = C.ink; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, 8, 0, Math.PI * 2); g.stroke();
+    }
+  }
+  function showTip(p) {
+    const h = p.h;
+    el.resTip.textContent = '';
+    const strong = document.createElement('strong');
+    strong.textContent = h.off == null ? 'Không gõ' : describeOff(h.off);
+    const span = document.createElement('span');
+    span.textContent = `Ô ${h.bar + 1} · phách ${h.beat + 1}${h.sub > 1 ? '.' + (h.j + 1) : ''} · ${LABEL[h.r]}${h.silent ? ' · ô im' : ''}`;
+    el.resTip.append(strong, span);
+    const W = (sizes.get(el.resChart) || {}).w || el.resChart.clientWidth;
+    el.resTip.style.left = clamp(p.x, 80, Math.max(80, W - 80)) + 'px';
+    el.resTip.style.top = p.y + 'px';
+    el.resTip.hidden = false;
+  }
+  function hideTip() { if (el.resTip) el.resTip.hidden = true; }
+
+  /* =============================== History =============================== */
+  function saveHistory(res) {
+    const raw = store.get(LS_HIST, []);
+    const arr = Array.isArray(raw) ? raw : [];
+    arr.unshift({
+      at: res.at, song: res.song ? shortName(res.song, 40) : null, bpm: res.cfg.bpm, bpmEnd: res.bpmEnd, beats: res.cfg.beats, sub: res.cfg.sub,
+      length: res.totalBars || res.cfg.length, bars: res.barsPlayed, diff: res.cfg.diff, gap: res.cfg.gap, target: res.cfg.target,
+      acc: Math.round(res.acc * 10) / 10, grade: res.grade, pass: res.pass, stopped: res.stoppedEarly,
+      mean: res.mean == null ? null : Math.round(res.mean), sd: res.sd == null ? null : Math.round(res.sd),
+    });
+    store.set(LS_HIST, arr.slice(0, 40));
+  }
+  function renderHistory() {
+    const raw = store.get(LS_HIST, []);
+    const list = Array.isArray(raw) ? raw.filter((h) => h && typeof h === 'object' && Number.isFinite(h.acc)) : [];
+    el.logBody.textContent = '';
+    const any = list.length > 0;
+    el.logTable.hidden = !any; el.logEmpty.hidden = any; el.clearLog.hidden = !any;
+    if (!any) { setText(el.logNote, 'Kết quả mỗi bài được lưu trên trình duyệt này để bạn theo dõi tiến bộ.'); return; }
+    let best = list[0];
+    for (const h of list) if (h.acc > best.acc) best = h;
+    setText(el.logNote, `${list.length} lượt đã lưu trên trình duyệt này. Cao nhất: ${fmtPct(best.acc)} ở ${best.bpm} BPM, ${best.song ? '♪ ' + best.song : SUB_NAME[best.sub] || ''}.`);
+    for (const h of list.slice(0, 12)) {
+      const tr = document.createElement('tr');
+      const td = (content, cls) => { const c = document.createElement('td'); if (cls) c.className = cls; if (content instanceof Node) c.appendChild(content); else c.textContent = content; tr.appendChild(c); return c; };
+      td(fmtDate(h.at));
+      const srcCell = td(h.song ? '♪ ' + h.song : 'Metronome', 'src');
+      if (h.song) srcCell.title = h.song;
+      td(h.bpmEnd && h.bpmEnd !== h.bpm ? `${h.bpm}→${h.bpmEnd}` : String(h.bpm), 'num');
+      td(`${h.beats}/4`);
+      td(SUB_NAME[h.sub] || '—');
+      td(h.length ? `${h.bars}/${h.length}` : String(h.bars), 'num');
+      td(DIFF[h.diff] ? DIFF[h.diff].name : '—');
+      const accCell = document.createElement('span'); accCell.className = 'acc-cell';
+      const mini = document.createElement('span'); mini.className = 'mini' + (h.pass ? ' pass' : '');
+      const fill = document.createElement('i'); fill.style.width = clamp(h.acc, 0, 100) + '%';
+      mini.appendChild(fill); accCell.append(mini, document.createTextNode(fmtPct(h.acc)));
+      td(accCell, 'num');
+      const chip = document.createElement('span'); chip.className = 'chip' + (h.pass ? ' pass' : '');
+      const gb = document.createElement('b'); gb.textContent = h.grade || '—';
+      chip.append(gb, document.createTextNode(h.stopped ? 'dừng sớm' : h.pass ? 'đạt' : 'chưa đạt'));
+      td(chip);
+      td(h.mean == null ? '—' : describeOff(h.mean), 'num');
+      el.logBody.appendChild(tr);
+    }
+  }
+
+  /* =============================== Settings UI =============================== */
+  function saveSettings() { store.set(LS_SET, settings); }
+  function syncForm() {
+    el.bpmRange.value = settings.bpm; el.bpmNumIn.value = settings.bpm;
+    for (const name of ['beats', 'sub', 'length', 'diff', 'sound']) {
+      const r = el.form.querySelector(`input[name="${name}"][value="${settings[name]}"]`);
+      if (r) r.checked = true;
+    }
+    (effSource() === 'song' ? el.srcSong : el.srcMetro).checked = true;
+    el.accentIn.checked = settings.accent; el.subClickIn.checked = settings.subClick;
+    el.targetIn.value = settings.target; el.gapIn.value = settings.gap; el.rampIn.value = settings.ramp;
+    el.volumeIn.value = settings.volume; el.latencyIn.value = settings.latency;
+    el.songClickIn.checked = settings.songClick; el.songVolIn.value = settings.songVol;
+    syncLabels();
+  }
+  function syncLabels() {
+    const songSrc = effSource() === 'song', bpm = effBpm();
+    if (!isActive()) { setText(el.bpmNum, String(bpm)); setText(el.tempoName, tempoName(bpm)); }
+    const meter = `${settings.beats}/4 · ${SUB_NAME[settings.sub]}`;
+    setText(el.meterLabel, songSrc ? `♪ ${shortName(SONG.name, 22)} · ${meter}` : meter);
+    setText(el.subVal, SUB_NAME[settings.sub]);
+    setText(el.targetVal, settings.target + '%');
+    setText(el.volVal, settings.volume + '%');
+    setText(el.latVal, fmtMs(settings.latency));
+    const w = windowsFor(DIFF[settings.diff], 60 / bpm / settings.sub);
+    setText(el.diffNote, `Ở tempo này: Hoàn hảo ±${Math.round(w.perfect * 1000)} ms · Tốt ±${Math.round(w.good * 1000)} ms · Khá ±${Math.round(w.ok * 1000)} ms quanh nốt. Nốt càng dày thì cửa sổ càng hẹp.`);
+    el.pdWeight.setAttribute('y', (9 + ((bpm - BPM_MIN) / (BPM_MAX - BPM_MIN)) * 16).toFixed(1));
+    setText(el.sourceNote, !SONG
+      ? 'Tải một bài ở mục Phân tích beat để gõ theo nhạc.'
+      : songSrc
+        ? `Đang gõ theo “${shortName(SONG.name, 40)}”, khoảng ${bpm} BPM. Tempo, click ngắt quãng và tăng tốc không dùng cho bài hát.`
+        : `Đã có bài “${shortName(SONG.name, 40)}”. Chọn Bài hát để gõ theo nhạc.`);
+    if (!isActive()) hudDirty = true;
+  }
+  function refreshPreview() {
+    if (isActive()) return;
+    preview = null;
+    if (effSource() === 'song') {
+      preview = buildSongTimeline(songCfg(), 0);
+      if (preview) { const fe = preview.events.find((e) => e.scorable); preview.viewT = fe.t - PREVIEW_LEAD * fe.beatDur; }
+    }
+    if (!preview) {
+      const cfg = Object.assign({}, settings);
+      preview = makeTimeline(cfg, 0, 0);
+      generateUntil(preview, 12 + (cfg.beats * 2 * 60) / cfg.bpm);
+      preview.viewT = (-PREVIEW_LEAD * 60) / cfg.bpm;
+    }
+    buildLeds(preview.cfg.beats); buildSegments(segCount(preview)); idleProgress();
+    laneDirty = meterDirty = hudDirty = true;
+    if (SONG) { updateSongStartLabel(); songDirty = true; }
+  }
+  function setBpm(v) {
+    if (busyNow() || effSource() === 'song') return;
+    settings.bpm = clamp(Math.round(v) || settings.bpm, BPM_MIN, BPM_MAX);
+    saveSettings(); syncForm(); refreshPreview();
+  }
+  function onFormInput(e) {
+    const t = e.target; if (!t || !t.name) return;
+    switch (t.name) {
+      case 'bpmRange': setBpm(+t.value); return;
+      case 'bpmNum': if (e.type === 'change') setBpm(+t.value); return;
+      case 'source': settings.source = t.value; break;
+      case 'beats': case 'sub': case 'length': settings[t.name] = +t.value; break;
+      case 'diff': case 'gap': case 'ramp': settings[t.name] = t.value; break;
+      case 'sound': settings.sound = t.value; if (e.type === 'change') previewSound(); break;
+      case 'accent': case 'subClick': settings[t.name] = t.checked; break;
+      case 'target': case 'latency': settings[t.name] = +t.value; break;
+      case 'volume': settings.volume = +t.value; applyVolume(); break;
+      default: return;
+    }
+    const prevBeats = preview ? preview.cfg.beats : settings.beats;
+    settings = sanitize(settings);
+    saveSettings();
+    if (t.name === 'beats' && SONG && prevBeats !== settings.beats) recomputeDownbeat(SONG.times[SONG.startIdx]);
+    syncLabels();
+    if (t.name === 'source') { applyLocks(); stopAudition(); }
+    if (t.name !== 'volume' && t.name !== 'latency') refreshPreview();
+  }
+
+  /* =============================== Input & events =============================== */
+  function onKeyDown(e) {
+    const ae = document.activeElement, tag = ae ? ae.tagName : '', type = ae && ae.type ? String(ae.type) : '';
+    const isOtherBtn = tag === 'BUTTON' && ae !== el.startBtn && ae !== el.tapPad;
+    if (e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar') {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const busy = busyNow();
+      const nativeSpace = (tag === 'INPUT' && (type === 'checkbox' || type === 'text' || type === 'search' || type === 'file')) || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'SUMMARY' || (ae && ae.isContentEditable) || isOtherBtn;
+      if (!busy && nativeSpace) return;
+      e.preventDefault();
+      spaceCaptured = true;
+      if (e.repeat) return;
+      if (busy && ae && ae !== document.body && typeof ae.blur === 'function') ae.blur();
+      onTapEvent(evTime(e));
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (isActive()) { e.preventDefault(); finishSession(true); }
+      else if (phase === 'results') { e.preventDefault(); closeResults(); }
+      else if (aud) { e.preventDefault(); stopAudition(); }
+      return;
+    }
+    if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && phase === 'idle' && effSource() === 'metro' && !e.altKey && !e.ctrlKey && !e.metaKey) {
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'CANVAS') return;
+      e.preventDefault();
+      setBpm(settings.bpm + (e.key === 'ArrowUp' ? 1 : -1) * (e.shiftKey ? 5 : 1));
+    }
+  }
+  function onKeyUp(e) {
+    if ((e.code === 'Space' || e.key === ' ') && spaceCaptured) { e.preventDefault(); spaceCaptured = false; }
+  }
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (n) => cs.getPropertyValue(n).trim();
+    Object.assign(C, { screen: v('--screen'), lane: v('--lane'), ink: v('--ink'), ink2: v('--ink-2'), muted: v('--muted'), line: v('--line'), staff: v('--staff'), track: v('--track'), accent: v('--accent') });
+    for (const k of ['perfect', 'good', 'ok', 'miss']) { J[k] = v('--j-' + k); JT[k] = v('--jt-' + k); }
+    J.extra = J.miss; JT.extra = JT.miss;
+    laneDirty = meterDirty = songDirty = true;
+    if (phase === 'results') drawResultChart();
+  }
+  function cacheEls() {
+    const ids = ['stage', 'bpmNum', 'tempoName', 'meterLabel', 'bpmUp', 'bpmDown', 'pdArm', 'pdWeight', 'leds', 'score', 'combo', 'acc',
+      'lane', 'laneHint', 'calib', 'calibCount', 'calibMed', 'countdown', 'countNum', 'lastOff', 'avgOff', 'meter', 'progLabel', 'progress',
+      'accLabel', 'targetBar', 'accFill', 'targetMark', 'tapPad', 'startBtn', 'toast', 'results', 'resGrade', 'resVerdict', 'resAcc', 'resTarget',
+      'resMeta', 'againBtn', 'nextBtn', 'closeRes', 'resStats', 'resLegend', 'resChart', 'resTip', 'resBarsNote', 'resBars', 'resTips', 'resTable',
+      'bpmNumIn', 'bpmRange', 'subVal', 'accentIn', 'targetVal', 'targetIn', 'diffNote', 'gapIn', 'rampIn', 'subClickIn', 'volVal', 'volumeIn',
+      'latVal', 'latencyIn', 'calibBtn', 'calibMsg', 'clearLog', 'logNote', 'logEmpty', 'logTable', 'logBody', 'announcer',
+      'fsSource', 'fsTempo', 'fsMeter', 'fsExercise', 'fsSound', 'fsLatency', 'sourceNote',
+      'songSec', 'songDrop', 'songFile', 'songStatus', 'songProg', 'songStatusText', 'songBody', 'songBpmVal', 'songTempoName', 'songBpmPrecise',
+      'songName', 'songDur', 'songBeats', 'songConf', 'songStab', 'songAlts', 'songStartLbl', 'waveCv', 'detailCv', 'songPlayBtn', 'songTime',
+      'songClickIn', 'songVolIn', 'dbPrev', 'dbNext', 'tempoNote', 'tempoCv', 'tempoTip', 'songPracticeBtn', 'songUseBpmBtn'];
+    for (const id of ids) el[id] = document.getElementById(id);
+    el.form = document.getElementById('settings');
+    el.srcMetro = document.getElementById('src-metro');
+    el.srcSong = document.getElementById('src-song');
+  }
+  function bind() {
+    el.form.addEventListener('submit', (e) => e.preventDefault());
+    el.form.addEventListener('input', onFormInput);
+    el.form.addEventListener('change', onFormInput);
+    el.bpmUp.addEventListener('click', () => setBpm(settings.bpm + 1));
+    el.bpmDown.addEventListener('click', () => setBpm(settings.bpm - 1));
+    el.startBtn.addEventListener('click', () => {
+      if (isActive()) finishSession(true);
+      else if (phase === 'idle' || phase === 'results') startSession('play');
+    });
+    // During play the pad reacts on pointerdown for timing. Starting goes through click,
+    // because iOS only unlocks audio from a click/touchend gesture.
+    el.tapPad.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return;
+      if (isActive()) { e.preventDefault(); onTapEvent(evTime(e)); } else pulsePad();
+    });
+    el.tapPad.addEventListener('click', (e) => { if (!busyNow()) onTapEvent(evTime(e)); });
+    el.tapPad.addEventListener('mousedown', (e) => { if (isActive()) e.preventDefault(); });
+    el.tapPad.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) onTapEvent(evTime(e)); } });
+    el.calibBtn.addEventListener('click', () => {
+      startSession('calib');
+      const r = el.stage.getBoundingClientRect();
+      if (r.top < 0 || r.top > window.innerHeight * 0.5) el.stage.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+    });
+    el.againBtn.addEventListener('click', () => startSession('play'));
+    el.nextBtn.addEventListener('click', () => { const nb = +el.nextBtn.dataset.bpm; closeResults(); setBpm(nb); startSession('play'); });
+    el.closeRes.addEventListener('click', closeResults);
+    el.clearLog.addEventListener('click', () => {
+      const now = Date.now();
+      if (now - clearArmed < 4000) {
+        store.set(LS_HIST, []); clearArmed = 0;
+        el.clearLog.textContent = 'Xoá nhật ký';
+        renderHistory(); toast('Đã xoá nhật ký luyện tập.');
+        return;
+      }
+      clearArmed = now;
+      el.clearLog.textContent = 'Bấm lần nữa để xoá';
+      setTimeout(() => { if (clearArmed && Date.now() - clearArmed >= 3900) { clearArmed = 0; el.clearLog.textContent = 'Xoá nhật ký'; } }, 4100);
+    });
+
+    // ---- beat analysis ----
+    el.songFile.addEventListener('change', () => { const f = el.songFile.files && el.songFile.files[0]; if (f) loadSong(f); });
+    const dragOn = (e) => { e.preventDefault(); if (!busyNow()) el.songDrop.classList.add('drag'); };
+    const dragOff = () => el.songDrop.classList.remove('drag');
+    for (const target of [el.songDrop, el.songSec]) {
+      target.addEventListener('dragover', dragOn);
+      target.addEventListener('dragenter', dragOn);
+      target.addEventListener('dragleave', (e) => { if (!el.songSec.contains(e.relatedTarget)) dragOff(); });
+      target.addEventListener('drop', (e) => {
+        e.preventDefault(); e.stopPropagation(); dragOff();
+        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) loadSong(f);
+      });
+    }
+    // a file dropped anywhere else on the page is analysed too, instead of the browser opening it
+    window.addEventListener('dragover', (e) => {
+      const types = e.dataTransfer && e.dataTransfer.types ? Array.from(e.dataTransfer.types) : [];
+      if (types.includes('Files')) e.preventDefault();
+    });
+    window.addEventListener('drop', (e) => {
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (!f) return;
+      e.preventDefault();
+      loadSong(f);
+    });
+    el.songPlayBtn.addEventListener('click', toggleAudition);
+    el.songClickIn.addEventListener('change', () => { settings.songClick = el.songClickIn.checked; saveSettings(); refreshPreview(); });
+    el.songVolIn.addEventListener('input', () => { settings.songVol = +el.songVolIn.value; saveSettings(); applySongVolume(); });
+    el.dbPrev.addEventListener('click', () => shiftDownbeat(-1));
+    el.dbNext.addEventListener('click', () => shiftDownbeat(1));
+    el.songPracticeBtn.addEventListener('click', () => {
+      if (!SONG || busyNow()) return;
+      settings.source = 'song'; saveSettings();
+      syncForm(); applyLocks(); refreshPreview();
+      const r = el.stage.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > window.innerHeight) el.stage.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
+      startSession('play');
+    });
+    el.songUseBpmBtn.addEventListener('click', () => {
+      if (!SONG || busyNow()) return;
+      stopAudition();
+      settings.source = 'metro';
+      settings.bpm = clamp(Math.round(SONG.bpm), BPM_MIN, BPM_MAX);
+      saveSettings(); syncForm(); applyLocks(); refreshPreview();
+      toast(`Metronome đã đặt ${settings.bpm} BPM.`);
+    });
+    const waveSeek = (clientX) => {
+      if (!SONG || busyNow()) return;
+      const r = el.waveCv.getBoundingClientRect();
+      const t = clamp((clientX - r.left) / Math.max(1, r.width), 0, 1) * SONG.dur;
+      setSongStart(t);
+      afterSongEdit(true);
+    };
+    el.waveCv.addEventListener('pointerdown', (e) => { if (e.button > 0) return; waveSeek(e.clientX); });
+    el.waveCv.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); moveSongStart(e.key === 'ArrowRight' ? 1 : -1); }
+    });
+    el.tempoCv.addEventListener('pointermove', (e) => {
+      if (!SONG || !tempoGeo) return;
+      const r = el.tempoCv.getBoundingClientRect(), mx = e.clientX - r.left;
+      const t = ((mx - tempoGeo.padL) / tempoGeo.pw) * SONG.dur;
+      let i = lowerBound(SONG.times, t);
+      if (i > 0 && (i >= SONG.times.length || Math.abs(SONG.times[i - 1] - t) < Math.abs(SONG.times[i] - t))) i--;
+      i = clamp(i, 0, SONG.times.length - 1);
+      if (i !== tempoHover) { tempoHover = i; drawTempoCurve(); }
+      showTempoTip(i);
+    });
+    el.tempoCv.addEventListener('pointerleave', () => { tempoHover = null; el.tempoTip.hidden = true; drawTempoCurve(); });
+    el.tempoCv.addEventListener('blur', () => { tempoHover = null; el.tempoTip.hidden = true; drawTempoCurve(); });
+    el.tempoCv.addEventListener('keydown', (e) => {
+      if (!SONG || (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft')) return;
+      e.preventDefault();
+      const step = Math.max(1, Math.round(SONG.times.length / 60));
+      tempoHover = clamp((tempoHover == null ? 0 : tempoHover) + (e.key === 'ArrowRight' ? step : -step), 0, SONG.times.length - 1);
+      drawTempoCurve(); showTempoTip(tempoHover);
+    });
+
+    window.addEventListener('keydown', onKeyDown, true);
+    window.addEventListener('keyup', onKeyUp, true);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) return;
+      if (isActive()) { finishSession(true); toast('Bài tập đã dừng vì trang bị ẩn.'); }
+      if (aud) stopAudition();
+    });
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver((entries) => {
+        for (const en of entries) sizes.set(en.target, { w: en.contentRect.width, h: en.contentRect.height });
+        laneDirty = meterDirty = songDirty = true;
+        updateCountdownPos();
+        if (phase === 'results') drawResultChart();
+      });
+      for (const cv of [el.lane, el.meter, el.resChart, el.waveCv, el.detailCv, el.tempoCv]) ro.observe(cv);
+    } else {
+      window.addEventListener('resize', () => { laneDirty = meterDirty = songDirty = true; if (phase === 'results') drawResultChart(); });
+    }
+    const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    if (mq) { if (mq.addEventListener) mq.addEventListener('change', readColors); else if (mq.addListener) mq.addListener(readColors); }
+    new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { laneDirty = meterDirty = songDirty = true; if (phase === 'results') drawResultChart(); });
+
+    el.resChart.addEventListener('pointermove', (e) => {
+      const r = el.resChart.getBoundingClientRect();
+      const mx = e.clientX - r.left, my = e.clientY - r.top;
+      let best = -1, bd = Infinity;
+      chartPts.forEach((p, k) => { const d = Math.hypot(p.x - mx, (p.y - my) * 0.5); if (d < bd) { bd = d; best = k; } });
+      if (best >= 0 && bd < 26) showTip(chartPts[best]); else hideTip();
+    });
+    el.resChart.addEventListener('pointerleave', hideTip);
+    el.resChart.addEventListener('blur', () => { hideTip(); if (chartSel != null) { chartSel = null; drawResultChart(); } });
+    el.resChart.addEventListener('keydown', (e) => {
+      if (!chartPts.length || (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft')) return;
+      e.preventDefault();
+      chartSel = clamp((chartSel == null ? -1 : chartSel) + (e.key === 'ArrowRight' ? 1 : -1), 0, chartPts.length - 1);
+      drawResultChart();
+      showTip(chartPts[chartSel]);
+    });
+  }
+
+  /* =============================== Boot =============================== */
+  function boot(data) {
+    data = data || {};
+    if (data.settings) settings = sanitize(data.settings);
+    cacheEls();
+    readColors();
+    syncForm();
+    refreshPreview();
+    renderHistory();
+    bind();
+    setStartBtn();
+    applyLocks();
+    updateCountdownPos();
+    requestAnimationFrame(frame);
+    if (data.lastResult && data.resultsOpen) { try { showResults(data.lastResult); } catch (e) { /* ignore */ } }
+    try {
+      const hot = window.claude && window.claude.hot;
+      if (hot && typeof hot.snapshot === 'function') hot.snapshot(() => ({ settings, lastResult, resultsOpen: phase === 'results' }));
+    } catch (e) { /* ignore */ }
+  }
+  const hot = window.claude && window.claude.hot;
+  if (hot && typeof hot.ready === 'function') hot.ready(boot);
+  else boot((hot && hot.data) || {});
+})();
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>
+</body>
+</html>
