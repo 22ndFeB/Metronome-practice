@@ -156,6 +156,24 @@ kbd {
 }
 .stage.show-results > :not(.results):not(.toast) { display: none !important; }
 
+/* mode switch: Performance Test (scored) / Practice Only (click and notes, nothing scored) */
+.app[data-mode="practice"] .only-test, .app[data-mode="test"] .only-practice { display: none !important; }
+.mode-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.mode-tabs { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 11px; background: var(--track); }
+.mode-tab {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 36px; padding-inline: 14px; border: 0; border-radius: 8px; background: transparent;
+  font: 600 14px var(--font-body); color: var(--ink-2); white-space: nowrap;
+}
+.mode-tab svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.mode-tab svg .dot-fill { fill: currentColor; stroke: none; }
+.mode-tab:hover:not(:disabled) { color: var(--ink); }
+.mode-tab[aria-checked="true"] { background: var(--screen); color: var(--ink); box-shadow: 0 0 0 1px var(--line), var(--shadow-sm); }
+.mode-tab[aria-checked="true"] svg { color: var(--accent); }
+.mode-note { margin: 0; flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--muted); }
+.time-bar { position: relative; height: 14px; border-radius: 7px; background: var(--track); overflow: hidden; }
+.tm-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 7px; background: var(--accent); }
+
 .readout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 22px; }
 .tempo { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .pendulum { width: 34px; height: 46px; flex: none; overflow: visible; }
@@ -470,6 +488,8 @@ tbody tr:last-child td { border-bottom: 0; }
   .lang-switch { top: -3px; }
   .lang-switch button { height: 26px; min-width: 36px; padding-inline: 8px; }
   .brand p { margin-top: 10px; }
+  .mode-tabs { display: flex; width: 100%; }
+  .mode-tab { flex: 1 1 0; padding-inline: 8px; font-size: 13.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .led, .tap-pad, .tb-fill, .sp-track i { transition: none; }
@@ -495,7 +515,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
   transform-origin: 0 0; transform: rotate(90deg) translateY(-100%);
   padding: max(8px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-top));
 }
-.stage.immersive .controls, .stage.immersive .lane-hint, .stage.immersive .bpm-steps { display: none; }
+.stage.immersive .controls, .stage.immersive .lane-hint, .stage.immersive .bpm-steps, .stage.immersive .mode-bar { display: none; }
 .stage.immersive .readout { flex-wrap: nowrap; gap: 6px 18px; padding-right: 96px; }
 .stage.immersive .tempo { gap: 10px; }
 .stage.immersive .pendulum { width: 24px; height: 32px; }
@@ -521,7 +541,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
 
 </head>
 <body>
-<div class="app">
+<div class="app" id="app" data-mode="test">
   <header class="masthead">
     <div class="brand">
       <h1>Metronome</h1>
@@ -541,6 +561,19 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
 
   <main class="layout">
     <section class="stage" id="stage" data-i18n-aria="stage.aria" aria-label="Màn luyện nhịp">
+      <div class="mode-bar">
+        <div class="mode-tabs" id="modeTabs" role="radiogroup" data-i18n-aria="mode.aria" aria-label="Chế độ">
+          <button type="button" class="mode-tab" role="radio" data-mode="test" aria-checked="true" tabindex="0">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><circle cx="8" cy="8" r="3.1"/><circle class="dot-fill" cx="8" cy="8" r="1"/></svg>
+            <span data-i18n="mode.test">Performance Test</span>
+          </button>
+          <button type="button" class="mode-tab" role="radio" data-mode="practice" aria-checked="false" tabindex="-1">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.4 14.5h7.2L9.7 1.7H6.3z"/><path d="M8 11.8 11.6 4.2"/></svg>
+            <span data-i18n="mode.practice">Practice Only</span>
+          </button>
+        </div>
+        <p class="mode-note" id="modeNote">Chấm điểm từng nốt, có bảng kết quả và lưu vào nhật ký.</p>
+      </div>
       <div class="readout">
         <div class="tempo">
           <svg class="pendulum" viewBox="0 0 32 44" aria-hidden="true">
@@ -559,10 +592,15 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
           </div>
         </div>
         <div class="leds" id="leds" aria-hidden="true"></div>
-        <dl class="scoreboard">
+        <dl class="scoreboard only-test">
           <div><dt data-i18n="sb.score">Điểm</dt><dd id="score">0</dd></div>
           <div><dt data-i18n="sb.combo">Combo</dt><dd id="combo">0</dd></div>
           <div><dt data-i18n="sb.acc">Chính xác</dt><dd id="acc">—</dd></div>
+        </dl>
+        <dl class="scoreboard only-practice">
+          <div><dt data-i18n="pr.elapsed">Đã luyện</dt><dd id="prElapsed">0:00</dd></div>
+          <div><dt data-i18n="pr.left">Còn lại</dt><dd id="prLeft">5:00</dd></div>
+          <div><dt data-i18n="pr.bar">Ô nhịp</dt><dd id="prBars">0</dd></div>
         </dl>
       </div>
 
@@ -594,9 +632,13 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
           <div class="row-head"><span class="row-title" data-i18n="prog.title">Tiến trình</span><span class="row-vals" id="progLabel">16 ô</span></div>
           <div class="progress" id="progress" aria-hidden="true"></div>
         </div>
-        <div class="bar-block">
+        <div class="bar-block only-test">
           <div class="row-head"><span class="row-title" data-i18n="acc.title">Độ chính xác</span><span class="row-vals" id="accLabel">— · mục tiêu 85%</span></div>
           <div class="target-bar" id="targetBar"><div class="tb-fill" id="accFill"></div><div class="tb-mark" id="targetMark" data-i18n-title="acc.target" title="Mục tiêu"></div></div>
+        </div>
+        <div class="bar-block only-practice">
+          <div class="row-head"><span class="row-title" data-i18n="pr.time">Thời gian</span><span class="row-vals" id="timeLabel">0:00 / 5:00</span></div>
+          <div class="time-bar" id="timeBar"><div class="tm-fill" id="timeFill"></div></div>
         </div>
       </div>
 
@@ -675,7 +717,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
           <div class="row-head"><span class="row-title" data-i18n="song.wave">Sóng âm và beat</span><span class="row-vals" id="songStartLbl"></span></div>
           <div class="wave-box"><canvas id="waveCv" tabindex="0" role="img" data-i18n-aria="song.waveAria" aria-label="Sóng âm của bài. Bấm để chọn chỗ bắt đầu luyện, hoặc dùng phím mũi tên trái phải để dời từng ô nhịp."></canvas></div>
           <div class="detail-box"><canvas id="detailCv" role="img" data-i18n-aria="song.detailAria" aria-label="Phóng to quanh vị trí đang nghe: đường độ mạnh âm bật lên và vạch beat"></canvas></div>
-          <p class="hint" data-i18n="song.waveHint">Bấm vào sóng âm để chọn chỗ bắt đầu luyện. Vạch nhỏ trên cùng là phách 1 của mỗi ô, vùng tô màu là đoạn sẽ được chấm. Khung dưới phóng to quanh chỗ đang nghe: vạch beat nên trùng các đỉnh âm.</p>
+          <p class="hint" data-i18n="song.waveHint">Bấm vào sóng âm để chọn chỗ bắt đầu luyện. Vạch nhỏ trên cùng là phách 1 của mỗi ô, vùng tô màu là đoạn sẽ luyện. Khung dưới phóng to quanh chỗ đang nghe: vạch beat nên trùng các đỉnh âm.</p>
         </div>
         <div class="song-controls">
           <button type="button" class="btn-secondary" id="songPlayBtn">Nghe thử</button>
@@ -692,7 +734,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
           <div class="tempo-box"><canvas id="tempoCv" tabindex="0" role="img" data-i18n-aria="song.tempoAria" aria-label="Biểu đồ tempo từng beat theo thời gian"></canvas><div class="tip" id="tempoTip" hidden></div></div>
         </div>
         <div class="song-actions">
-          <button type="button" class="btn-primary" id="songPracticeBtn" data-i18n="song.practice">Gõ theo bài này</button>
+          <button type="button" class="btn-primary" id="songPracticeBtn">Gõ theo bài này</button>
           <button type="button" class="btn-secondary" id="songUseBpmBtn"></button>
         </div>
       </div>
@@ -752,7 +794,20 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
 
         <fieldset id="fsExercise">
           <div class="sec-title" data-i18n="set.exercise">Bài tập</div>
-          <div class="field">
+          <div class="field only-practice">
+            <div class="field-head"><span id="pminLbl" data-i18n="set.practiceTime">Thời gian luyện (phút)</span></div>
+            <div class="seg-ctl" role="radiogroup" aria-labelledby="pminLbl">
+              <label><input type="radio" name="practiceMin" id="pmin-1" value="1"><span class="pill">1</span></label>
+              <label><input type="radio" name="practiceMin" id="pmin-2" value="2"><span class="pill">2</span></label>
+              <label><input type="radio" name="practiceMin" id="pmin-5" value="5"><span class="pill">5</span></label>
+              <label><input type="radio" name="practiceMin" id="pmin-10" value="10"><span class="pill">10</span></label>
+              <label><input type="radio" name="practiceMin" id="pmin-15" value="15"><span class="pill">15</span></label>
+              <label><input type="radio" name="practiceMin" id="pmin-30" value="30"><span class="pill">30</span></label>
+              <label data-i18n-title="pmin.inf" title="Không giới hạn (với bài hát: đến hết bài), bấm Dừng khi luyện xong"><input type="radio" name="practiceMin" id="pmin-0" value="0" data-i18n-aria="len.infAria" aria-label="Không giới hạn"><span class="pill">∞</span></label>
+            </div>
+            <p class="hint" data-i18n="set.practiceHint">Hết giờ, nhịp dừng ở cuối ô nhịp đang chạy và có tiếng chuông báo.</p>
+          </div>
+          <div class="field only-test">
             <div class="field-head"><span id="lenLbl" data-i18n="set.length">Độ dài</span></div>
             <div class="seg-ctl" role="radiogroup" aria-labelledby="lenLbl">
               <label><input type="radio" name="length" id="len-8" value="8"><span class="pill" data-i18n="len.pill" data-i18n-args='{"n":8}'>8 ô</span></label>
@@ -762,11 +817,11 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
               <label data-i18n-title="len.inf" title="Không giới hạn (với bài hát: đến hết bài), bấm Dừng để xem kết quả"><input type="radio" name="length" id="len-0" value="0" data-i18n-aria="len.infAria" aria-label="Không giới hạn"><span class="pill">∞</span></label>
             </div>
           </div>
-          <div class="field">
+          <div class="field only-test">
             <div class="field-head"><label for="targetIn" data-i18n="set.target">Mục tiêu độ chính xác</label><span class="val" id="targetVal">85%</span></div>
             <input type="range" id="targetIn" name="target" min="50" max="100" step="5">
           </div>
-          <div class="field">
+          <div class="field only-test">
             <div class="field-head"><span id="diffLbl" data-i18n="set.diff">Độ khó (cửa sổ chấm)</span></div>
             <div class="seg-ctl" role="radiogroup" aria-labelledby="diffLbl">
               <label><input type="radio" name="diff" id="diff-easy" value="easy"><span class="pill" data-i18n="diff.easy">Dễ</span></label>
@@ -843,7 +898,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
         <h2 id="logTitle" data-i18n="log.title">Nhật ký luyện tập</h2>
         <button type="button" class="btn-ghost" id="clearLog" hidden>Xoá nhật ký</button>
       </div>
-      <p class="log-note" id="logNote">Kết quả mỗi bài được lưu trên trình duyệt này để bạn theo dõi tiến bộ.</p>
+      <p class="log-note" id="logNote">Kết quả mỗi bài Performance Test được lưu trên trình duyệt này để bạn theo dõi tiến bộ.</p>
       <p class="log-empty" id="logEmpty" data-i18n="log.empty">Chưa có lượt nào. Hoàn thành một bài để thấy điểm, độ chính xác và độ lệch trung bình ở đây.</p>
       <div class="table-wrap">
         <table id="logTable" hidden>
@@ -1199,6 +1254,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
   const DEFAULTS = {
     bpm: 90, beats: 4, sub: 1, accent: true, length: 16, target: 85, diff: 'normal', gap: 'off', ramp: 'off',
     sound: 'wood', subClick: true, volume: 80, latency: 0, source: 'metro', songClick: true, songVol: 80, immersive: true, lang: 'vi',
+    mode: 'test', practiceMin: 5,
   };
   const DIFF = {
     easy: { perfect: 0.040, good: 0.080, ok: 0.130 },
@@ -1207,6 +1263,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
   };
   const GAPS = { off: null, '3-1': [3, 1], '2-2': [2, 2], '1-1': [1, 1], '4-4': [4, 4], '1-3': [1, 3] };
   const RAMPS = { off: null, '2-4': [2, 4], '5-4': [5, 4], '5-8': [5, 8], '10-8': [10, 8] };
+  const PRACTICE_MINS = [1, 2, 5, 10, 15, 30, 0]; // Practice Only time limits in minutes, 0 = no limit
   const POINTS = { perfect: 1, good: 0.8, ok: 0.5, miss: 0, extra: 0 };
   const SCORE = { perfect: 300, good: 200, ok: 100, miss: 0, extra: 0 };
   const TEMPO_NAMES = [[40, 'Grave'], [60, 'Largo'], [66, 'Larghetto'], [76, 'Adagio'], [108, 'Andante'], [120, 'Moderato'], [168, 'Allegro'], [200, 'Presto'], [Infinity, 'Prestissimo']];
@@ -1257,6 +1314,25 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       'stop.esc': 'Dừng <kbd>Esc</kbd>',
       'imm.stop': '✕ Dừng',
       'imm.stopAria': 'Dừng bài tập',
+      'mode.aria': 'Chế độ',
+      'mode.test': 'Performance Test',
+      'mode.practice': 'Practice Only',
+      'mode.noteTest': 'Chấm điểm từng nốt, có bảng kết quả và lưu vào nhật ký.',
+      'mode.notePractice': 'Chỉ phát nhịp và chạy nốt: không chấm điểm, không lưu nhật ký.',
+      'pr.elapsed': 'Đã luyện',
+      'pr.left': 'Còn lại',
+      'pr.bar': 'Ô nhịp',
+      'pr.time': 'Thời gian',
+      'pr.unlimited': 'Không giới hạn',
+      'pr.barOf': 'Ô {cb}/{total}',
+      'set.practiceTime': 'Thời gian luyện (phút)',
+      'set.practiceHint': 'Hết giờ, nhịp dừng ở cuối ô nhịp đang chạy và có tiếng chuông báo.',
+      'pmin.inf': 'Không giới hạn (với bài hát: đến hết bài), bấm Dừng khi luyện xong',
+      'song.practicePr': 'Luyện theo bài này',
+      'song.startPr': 'Bắt đầu từ ô {bar} ({time}) · chạy {n} ô',
+      'toast.practiceDone': 'Hoàn thành buổi luyện: {time}.',
+      'toast.practiceStopped': 'Đã dừng luyện tập sau {time}.',
+      'ann.practice': 'Bắt đầu luyện tập, không chấm điểm. Đếm vào một ô nhịp.',
       'res.accOf': 'độ chính xác · mục tiêu',
       'res.again': 'Chơi lại <kbd>Space</kbd>',
       'res.close': 'Đóng',
@@ -1326,7 +1402,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       'song.wave': 'Sóng âm và beat',
       'song.waveAria': 'Sóng âm của bài. Bấm để chọn chỗ bắt đầu luyện, hoặc dùng phím mũi tên trái phải để dời từng ô nhịp.',
       'song.detailAria': 'Phóng to quanh vị trí đang nghe: đường độ mạnh âm bật lên và vạch beat',
-      'song.waveHint': 'Bấm vào sóng âm để chọn chỗ bắt đầu luyện. Vạch nhỏ trên cùng là phách 1 của mỗi ô, vùng tô màu là đoạn sẽ được chấm. Khung dưới phóng to quanh chỗ đang nghe: vạch beat nên trùng các đỉnh âm.',
+      'song.waveHint': 'Bấm vào sóng âm để chọn chỗ bắt đầu luyện. Vạch nhỏ trên cùng là phách 1 của mỗi ô, vùng tô màu là đoạn sẽ luyện. Khung dưới phóng to quanh chỗ đang nghe: vạch beat nên trùng các đỉnh âm.',
       'song.click': 'Kèm click theo beat',
       'song.vol': 'Âm lượng bài',
       'song.db': 'Phách 1',
@@ -1401,7 +1477,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       'log.title': 'Nhật ký luyện tập',
       'log.clear': 'Xoá nhật ký',
       'log.confirm': 'Bấm lần nữa để xoá',
-      'log.note0': 'Kết quả mỗi bài được lưu trên trình duyệt này để bạn theo dõi tiến bộ.',
+      'log.note0': 'Kết quả mỗi bài Performance Test được lưu trên trình duyệt này để bạn theo dõi tiến bộ.',
       'log.note': '{n} lượt đã lưu trên trình duyệt này. Cao nhất: {acc} ở {bpm} BPM, {what}.',
       'log.empty': 'Chưa có lượt nào. Hoàn thành một bài để thấy điểm, độ chính xác và độ lệch trung bình ở đây.',
       'log.when': 'Thời điểm', 'log.source': 'Nguồn', 'log.meter': 'Nhịp', 'log.sub': 'Gõ theo', 'log.bars': 'Ô nhịp', 'log.diff': 'Độ khó', 'log.acc': 'Chính xác', 'log.grade': 'Hạng', 'log.mean': 'Lệch TB',
@@ -1461,6 +1537,25 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       'stop.esc': 'Stop <kbd>Esc</kbd>',
       'imm.stop': '✕ Stop',
       'imm.stopAria': 'Stop the exercise',
+      'mode.aria': 'Mode',
+      'mode.test': 'Performance Test',
+      'mode.practice': 'Practice Only',
+      'mode.noteTest': 'Every note is scored, with a results screen and a log entry.',
+      'mode.notePractice': 'Just the click and the scrolling notes: nothing is scored or logged.',
+      'pr.elapsed': 'Elapsed',
+      'pr.left': 'Remaining',
+      'pr.bar': 'Bar',
+      'pr.time': 'Time',
+      'pr.unlimited': 'No limit',
+      'pr.barOf': 'Bar {cb}/{total}',
+      'set.practiceTime': 'Practice time (minutes)',
+      'set.practiceHint': 'When time is up, the click stops at the end of the current bar and a chime sounds.',
+      'pmin.inf': 'No limit (for songs: until the end); press Stop when you are done',
+      'song.practicePr': 'Practice along to this song',
+      'song.startPr': (p) => `Starts at bar ${p.bar} (${p.time}) · plays ${p.n} ${plural(p.n, 'bar', 'bars')}`,
+      'toast.practiceDone': 'Practice complete: {time}.',
+      'toast.practiceStopped': 'Practice stopped after {time}.',
+      'ann.practice': 'Practice started; nothing is scored. One bar of count-in.',
       'res.accOf': 'accuracy · target',
       'res.again': 'Play again <kbd>Space</kbd>',
       'res.close': 'Close',
@@ -1530,7 +1625,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       'song.wave': 'Waveform and beats',
       'song.waveAria': 'Waveform of the song. Click to choose where practice starts, or use the left and right arrow keys to move one bar at a time.',
       'song.detailAria': 'Zoomed view around the playhead: onset strength curve and beat lines',
-      'song.waveHint': 'Click the waveform to choose where practice starts. The small ticks along the top mark beat 1 of each bar, and the shaded area is the part that will be scored. The lower panel zooms in around the playhead: the beat lines should line up with the peaks.',
+      'song.waveHint': 'Click the waveform to choose where practice starts. The small ticks along the top mark beat 1 of each bar, and the shaded area is the part you will practice. The lower panel zooms in around the playhead: the beat lines should line up with the peaks.',
       'song.click': 'Click on each beat',
       'song.vol': 'Song volume',
       'song.db': 'Beat 1',
@@ -1602,10 +1697,10 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       'calib.few': 'Not enough data: at least 8 taps on the click are needed. Please test again.',
       'calib.result': 'Measured latency: {val}. Applied to Latency offset.',
       'calib.resultShaky': 'Measured latency: {val}, varying by ±{mad} ms, so test once more. Applied to Latency offset.',
-      'log.title': 'Practice log',
+      'log.title': 'Results log',
       'log.clear': 'Clear log',
       'log.confirm': 'Click again to clear',
-      'log.note0': 'Your results are saved in this browser so you can track your progress.',
+      'log.note0': 'Results of each Performance Test are saved in this browser so you can track your progress.',
       'log.note': (p) => `${p.n} ${plural(p.n, 'session', 'sessions')} saved in this browser. Best: ${p.acc} at ${p.bpm} BPM, ${p.what}.`,
       'log.empty': 'No sessions yet. Finish an exercise to see your score, accuracy and average offset here.',
       'log.when': 'When', 'log.source': 'Source', 'log.meter': 'Meter', 'log.sub': 'Notes', 'log.bars': 'Bars', 'log.diff': 'Difficulty', 'log.acc': 'Accuracy', 'log.grade': 'Grade', 'log.mean': 'Avg offset',
@@ -1718,6 +1813,8 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       songVol: clamp(Math.round(num(s.songVol, DEFAULTS.songVol)), 0, 100),
       immersive: s.immersive !== false,
       lang: has(I18N, s.lang) ? s.lang : DEFAULTS.lang,
+      mode: s.mode === 'practice' ? 'practice' : 'test',
+      practiceMin: PRACTICE_MINS.includes(+s.practiceMin) ? +s.practiceMin : DEFAULTS.practiceMin,
     };
   }
 
@@ -1920,15 +2017,27 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     const e = s.events[Math.min(s.judgeIdx, s.events.length - 1)];
     return e && e.scorable ? e.w : s.firstEv.w;
   }
-  const segCount = (o) => (o.cfg.length > 0 ? Math.max(1, Math.min(o.cfg.length, o.totalBars)) : 16);
+  // Practice Only shows the bars in cycling blocks of 16, like an unlimited test
+  const segCount = (o) => (o.practice ? 16 : o.cfg.length > 0 ? Math.max(1, Math.min(o.cfg.length, o.totalBars)) : 16);
+  /* Number of bars that fills a practice time limit: every bar that starts before the limit is played,
+     so the click stops at the end of a bar (follows the speed-up ramp). */
+  function barsForTime(c, sec) {
+    let tt = 0, b = 0;
+    while (tt < sec - 1e-6 && b < 100000) { tt += (c.beats * 60) / bpmForBar(c, b); b++; }
+    return Math.max(1, b);
+  }
 
   /* ---------- song timeline: lead-in bar + scored bars cut from the detected beats ---------- */
   function songPlan(cfg) {
     const M = cfg.beats, times = SONG.times, n = times.length;
     const maxBars = cfg.length > 0 ? cfg.length : Infinity;
+    const limit = cfg.timeLimit > 0 ? cfg.timeLimit : Infinity; // Practice Only time limit, in seconds of song
     const d0 = SONG.startIdx;
     let bars = 0;
-    for (let i = d0 + M; bars < maxBars && i + M <= n - 1; i += M) bars++;
+    for (let i = d0 + M; bars < maxBars && i + M <= n - 1; i += M) {
+      if (times[i] - times[d0 + M] >= limit - 1e-6) break;
+      bars++;
+    }
     const at = (i) => times[Math.min(n - 1, i)];
     return { d0, M, bars, leadStart: at(d0), start: at(d0 + M), end: at(d0 + M * (bars + 1)) };
   }
@@ -1967,7 +2076,10 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     o.song = { a0, T0, name: SONG.name, plan };
     return o;
   }
-  const songCfg = () => Object.assign({}, settings, { bpm: effBpm(), gap: 'off', ramp: 'off' });
+  const isPractice = () => settings.mode === 'practice';
+  // Practice Only plays the song to its end, or until the practice time is up
+  const songCfg = () => Object.assign({}, settings, { bpm: effBpm(), gap: 'off', ramp: 'off' },
+    isPractice() ? { length: 0, timeLimit: settings.practiceMin * 60 } : {});
 
   /* =============================== Session =============================== */
   let timer = null;
@@ -2002,6 +2114,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     await Promise.race([pr.catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
     if (!A.ctx || A.ctx.state !== 'running') { phase = 'idle'; setStartBtn(); applyLocks(); exitImmersive(); toast(t('toast.audioFail')); return; }
     const songMode = mode === 'play' && effSource() === 'song';
+    const practice = mode === 'play' && isPractice();
     clockDiff = null; sampleClock();
     let cfg, s;
     if (songMode) {
@@ -2011,7 +2124,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     } else {
       cfg = mode === 'calib'
         ? Object.assign({}, settings, { bpm: 100, beats: 4, sub: 1, accent: true, length: 6, gap: 'off', ramp: 'off', subClick: false, diff: 'normal' })
-        : Object.assign({}, settings);
+        : Object.assign({}, settings, practice ? { length: settings.practiceMin > 0 ? barsForTime(settings, settings.practiceMin * 60) : 0 } : {});
       const t0 = A.ctx.currentTime + 0.4;
       s = makeTimeline(cfg, t0, cfg.beats <= 2 ? 2 : 1);
       generateUntil(s, s.totalBars === Infinity ? t0 + 10 : Infinity);
@@ -2021,6 +2134,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       schedIdx: 0, judgeIdx: 0, drawFrom: 0, ledIdx: 0, tapFrom: 0, curBar: 0,
       counts: { perfect: 0, good: 0, ok: 0, miss: 0, extra: 0 }, pts: 0, n: 0, score: 0, combo: 0, maxCombo: 0,
       hits: [], taps: [], recent: [], popup: null, flash: null, lastOff: null, calibOffs: [],
+      practice, timeTotal: 0,
     });
     s.firstEv = s.events.find((e) => e.scorable);
     s.firstT = s.firstEv.t;
@@ -2028,6 +2142,10 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
       const le = s.events[s.events.length - 1];
       s.endT = le.t; s.endCap = le.w.capture;
       s.total = s.bars[s.bars.length - 1].end - s.firstT;
+    }
+    if (practice) { // shown time: the chosen limit, or the length of the song part when it ends first
+      const lim = settings.practiceMin * 60, fin = s.totalBars !== Infinity ? s.total : 0;
+      s.timeTotal = Math.round(lim ? (fin ? Math.min(lim, fin) : lim) : fin);
     }
     s.pps = ppsFor(cfg, laneW());
     s.bus = A.ctx.createGain(); s.bus.connect(A.master);
@@ -2048,7 +2166,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     updateCountdownPos();
     hudDirty = laneDirty = meterDirty = true;
     startTimer(); requestWakeLock();
-    announce(t(mode === 'calib' ? 'ann.calib' : songMode ? 'ann.song' : 'ann.start'));
+    announce(t(mode === 'calib' ? 'ann.calib' : practice ? 'ann.practice' : songMode ? 'ann.song' : 'ann.start'));
   }
 
   function update(vt) {
@@ -2057,6 +2175,10 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     if (s.mode === 'calib') {
       updateCalibOverlay();
       if (vt > s.endT + 0.45) finishSession(false);
+      return;
+    }
+    if (s.practice) { // nothing is judged; a timed practice ends after its last bar
+      if (s.totalBars !== Infinity && vt > s.endT + 0.4) finishSession(false);
       return;
     }
     checkMisses(s, vt);
@@ -2081,6 +2203,7 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     if (!isActive() || !S || !A.ctx) return;
     sampleClock();
     const s = S, t = perfToHeard(ts) - s.cal, ev = s.events;
+    if (s.practice) { practiceTap(s, t); return; }
     let best = null, bd = Infinity;
     for (let i = s.judgeIdx; i < ev.length; i++) {
       const e = ev[i];
@@ -2121,6 +2244,21 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     if (off !== null) s.flash = { r, at: e.jt };
     hudDirty = true;
   }
+  /* Practice Only: a tap is only shown (mark on the lane, tick on the timing meter), never judged or counted. */
+  function practiceTap(s, tapT) {
+    if (tapT < s.firstT - s.firstEv.w.capture) return; // count-in
+    if (s.totalBars !== Infinity && tapT > s.endT + s.endCap) return;
+    s.taps.push({ t: tapT, r: 'free' });
+    const e = nearestScorable(s, tapT);
+    if (e && Math.abs(tapT - e.t) <= e.w.capture) {
+      const off = tapT - e.t, now = performance.now();
+      s.recent.push({ off, r: 'free', at: now });
+      if (s.recent.length > 24) s.recent.shift();
+      s.lastOff = off;
+      s.flash = { r: 'free', at: now };
+    }
+    hudDirty = true;
+  }
   function extraTap(s, tapT) {
     s.counts.extra++; s.n++; s.combo = 0;
     const near = nearestScorable(s, tapT);
@@ -2137,12 +2275,23 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
     applyLocks(); setStartBtn(); showCountdown(null); showCalib(false);
     if (s.song) songDirty = true;
     if (s.mode === 'calib') { finishCalib(s); toIdle(); return; }
+    if (s.practice) { finishPractice(s, aborted); return; }
     const judged = s.counts.perfect + s.counts.good + s.counts.ok + s.counts.miss;
     if (judged < 4) { toIdle(); toast(t(aborted ? 'toast.stoppedFew' : 'toast.finished')); return; }
     const res = computeResult(s, aborted);
     if (!res.stoppedEarly) { try { chime(res.pass); } catch (e) { /* ignore */ } }
     saveHistory(res); renderHistory();
     showResults(res);
+  }
+  /* Practice Only ends without results or a log entry: just how long you practiced. */
+  function finishPractice(s, aborted) {
+    let played = A.ctx ? Math.max(0, perfToHeard(performance.now()) - s.cal - s.firstT) : 0;
+    if (s.timeTotal) played = Math.min(played, s.timeTotal);
+    toIdle();
+    if (!aborted) { try { chime(true); } catch (e) { /* ignore */ } }
+    const secs = aborted || !s.timeTotal ? Math.floor(played) : s.timeTotal; // a finished practice reports its full length
+    const msg = t(aborted ? 'toast.practiceStopped' : 'toast.practiceDone', { time: fmtTime(secs) });
+    toast(msg); announce(msg);
   }
   function finishCalib(s) {
     const offs = s.calibOffs.map((x) => x * 1000);
@@ -2445,10 +2594,10 @@ self.onmessage = (e) => {
   }
   function updateSongStartLabel() {
     if (!SONG) return;
-    const plan = songPlan(settings), M = settings.beats;
+    const plan = songPlan(songCfg()), M = settings.beats;
     const barNo = Math.floor((SONG.startIdx - SONG.phase) / M) + 1;
     setText(el.songStartLbl, plan.bars > 0
-      ? t('song.start', { bar: barNo, time: fmtTime(SONG.times[SONG.startIdx]), n: plan.bars })
+      ? t(isPractice() ? 'song.startPr' : 'song.start', { bar: barNo, time: fmtTime(SONG.times[SONG.startIdx]), n: plan.bars })
       : t('song.startLate'));
   }
 
@@ -2518,7 +2667,7 @@ self.onmessage = (e) => {
     const { g, W, H } = f;
     g.clearRect(0, 0, W, H);
     const s = SONG, dur = s.dur, X = (t) => (t / dur) * W;
-    const plan = songPlan(settings), M = settings.beats, times = s.times;
+    const plan = songPlan(songCfg()), M = settings.beats, times = s.times;
     if (plan.bars > 0) {
       g.fillStyle = hexA(C.accent, 0.07); g.fillRect(X(plan.leadStart), 0, X(plan.start) - X(plan.leadStart), H);
       g.fillStyle = hexA(C.accent, 0.13); g.fillRect(X(plan.start), 0, X(plan.end) - X(plan.start), H);
@@ -3004,6 +3153,15 @@ self.onmessage = (e) => {
   function idleProgress() {
     const o = preview; if (!o) return;
     const c = o.cfg;
+    if (o.practice) {
+      const lim = settings.practiceMin * 60;
+      let total = lim, nBars = lim ? barsForTime(c, lim) : 0;
+      if (o.song) { const p = o.song.plan; total = lim ? Math.min(lim, p.end - p.start) : p.end - p.start; nBars = p.bars; }
+      setText(el.progLabel, nBars ? t('meta.bars', { n: nBars }) : t('pr.unlimited'));
+      segs.forEach((sg, k) => setSeg(sg, 'seg' + (barAudible(c, k) ? '' : ' silent'), 0, t('bar.n', { n: k + 1 })));
+      showPracticeClock(0, total, 0);
+      return;
+    }
     if (o.song) {
       const p = o.song.plan;
       setText(el.progLabel, t('prog.song', { n: p.bars, dur: fmtTime(p.end - p.start), start: fmtTime(p.start) }));
@@ -3023,6 +3181,7 @@ self.onmessage = (e) => {
     const cb = bar && !bar.isCount && bar.t <= vt ? bar.b : -1;
     const frac = cb >= 0 ? clamp((vt - bar.t) / (bar.end - bar.t), 0, 1) : 0;
     const finite = s.totalBars !== Infinity;
+    if (s.practice) { practiceProgress(s, vt, cb, frac); return; }
     const base = s.cfg.length === 0 ? Math.floor(Math.max(cb, 0) / 16) * 16 : 0;
     for (let k = 0; k < segs.length; k++) {
       const bi = base + k;
@@ -3044,6 +3203,32 @@ self.onmessage = (e) => {
     else if (cb < 0) label = t('prog.countin');
     else label = finite ? t('prog.barOf', { cb: cb + 1, total: s.totalBars, el: fmtTime(elapsed), tot: fmtTime(s.total) }) : t('prog.bar', { cb: cb + 1, el: fmtTime(elapsed) });
     setText(el.progLabel, label);
+  }
+  /* Practice Only: bars in blocks of 16 without grading, plus the practice clock. */
+  function practiceProgress(s, vt, cb, frac) {
+    const base = Math.floor(Math.max(cb, 0) / 16) * 16;
+    for (let k = 0; k < segs.length; k++) {
+      const bi = base + k;
+      let cls = 'seg' + (barAudible(s.cfg, bi) ? '' : ' silent'), wpct = 0;
+      if (s.totalBars !== Infinity && bi >= s.totalBars) cls = 'seg';
+      else if (cb >= 0 && bi < cb) wpct = 100;
+      else if (bi === cb) { cls += ' cur'; wpct = Math.round(frac * 1000) / 10; }
+      setSeg(segs[k], cls, wpct, t('bar.n', { n: bi + 1 }));
+    }
+    const elapsed = Math.max(0, vt - s.firstT), shown = s.timeTotal ? Math.min(elapsed, s.timeTotal) : elapsed;
+    setText(el.progLabel, cb < 0 ? t('prog.countin') : s.totalBars !== Infinity ? t('pr.barOf', { cb: cb + 1, total: s.totalBars }) : t('bar.n', { n: cb + 1 }));
+    showPracticeClock(shown, s.timeTotal, cb < 0 ? 0 : cb + 1);
+  }
+  let clockCache = { w: -1, hid: null };
+  function showPracticeClock(elapsed, total, bars) {
+    const secs = Math.floor(elapsed), whole = Math.round(total), up = fmtTime(secs); // elapsed + remaining always add up
+    setText(el.prElapsed, up);
+    setText(el.prLeft, total ? fmtTime(Math.max(0, whole - secs)) : '∞');
+    setText(el.prBars, String(bars));
+    setText(el.timeLabel, total ? `${up} / ${fmtTime(whole)}` : t('pr.unlimited'));
+    const hid = !total, w = total ? Math.round(clamp(elapsed / total, 0, 1) * 1000) / 10 : 0;
+    if (hid !== clockCache.hid) { clockCache.hid = hid; el.timeBar.hidden = hid; }
+    if (w !== clockCache.w) { clockCache.w = w; el.timeFill.style.width = w + '%'; }
   }
   function renderScore() {
     const s = S;
@@ -3101,6 +3286,7 @@ self.onmessage = (e) => {
     el.songDrop.classList.toggle('busy', busy);
     for (const b of [el.songPracticeBtn, el.songUseBpmBtn, el.dbPrev, el.dbNext, el.songPlayBtn]) b.disabled = busy || !SONG;
     for (const b of el.songAlts.querySelectorAll('button')) b.disabled = busy;
+    for (const b of el.modeTabs.querySelectorAll('button')) b.disabled = busy;
   }
   function pulsePad() {
     el.tapPad.classList.add('hit');
@@ -3444,7 +3630,7 @@ self.onmessage = (e) => {
   function saveSettings() { store.set(LS_SET, settings); }
   function syncForm() {
     el.bpmRange.value = settings.bpm; el.bpmNumIn.value = settings.bpm;
-    for (const name of ['beats', 'sub', 'length', 'diff', 'sound']) {
+    for (const name of ['beats', 'sub', 'length', 'diff', 'sound', 'practiceMin']) {
       const r = el.form.querySelector(`input[name="${name}"][value="${settings[name]}"]`);
       if (r) r.checked = true;
     }
@@ -3454,7 +3640,23 @@ self.onmessage = (e) => {
     el.volumeIn.value = settings.volume; el.latencyIn.value = settings.latency;
     el.songClickIn.checked = settings.songClick; el.songVolIn.value = settings.songVol;
     el.immersiveIn.checked = settings.immersive;
+    applyMode();
     syncLabels();
+  }
+  /* The mode switch: which tab is on, and which parts of the page belong to the mode (.only-test / .only-practice). */
+  function applyMode() {
+    el.app.dataset.mode = settings.mode;
+    for (const b of el.modeTabs.querySelectorAll('button[data-mode]')) {
+      const on = b.dataset.mode === settings.mode;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    }
+  }
+  function setMode(m) {
+    if (busyNow() || (m !== 'test' && m !== 'practice') || m === settings.mode) return;
+    if (phase === 'results') closeResults();
+    settings.mode = m; saveSettings();
+    applyMode(); syncLabels(); refreshPreview();
   }
   function syncLabels() {
     const songSrc = effSource() === 'song', bpm = effBpm();
@@ -3473,6 +3675,8 @@ self.onmessage = (e) => {
       : songSrc
         ? t('src.using', { name: shortName(SONG.name, 40), bpm })
         : t('src.have', { name: shortName(SONG.name, 40) }));
+    setText(el.modeNote, t(isPractice() ? 'mode.notePractice' : 'mode.noteTest'));
+    setText(el.songPracticeBtn, t(isPractice() ? 'song.practicePr' : 'song.practice'));
     if (!isActive()) hudDirty = true;
   }
 
@@ -3506,10 +3710,11 @@ self.onmessage = (e) => {
     if (phase === 'idle') refreshPreview(); // behind the results panel the stage keeps its state until the panel closes
     renderHistory();
     if (SONG) renderSongInfo();
-    if (songSt && !el.songStatus.hidden) setText(el.songStatusText, t(songSt.key, songSt.args));
+    if (songSt) setText(el.songStatusText, t(songSt.key, songSt.args));
     renderCalibMsg();
     el.tempoTip.hidden = true; hideTip();
-    if (phase === 'results' && lastResult) { renderResults(lastResult); drawResultChart(); } else hudDirty = true;
+    if (lastResult) renderResults(lastResult); // also when the panel is closed, so nothing stale is left behind
+    if (phase === 'results' && lastResult) drawResultChart(); else hudDirty = true;
     laneDirty = meterDirty = songDirty = true;
   }
   function refreshPreview() {
@@ -3520,11 +3725,12 @@ self.onmessage = (e) => {
       if (preview) { const fe = preview.events.find((e) => e.scorable); preview.viewT = fe.t - PREVIEW_LEAD * fe.beatDur; }
     }
     if (!preview) {
-      const cfg = Object.assign({}, settings);
+      const cfg = Object.assign({}, settings, isPractice() ? { length: 0 } : {});
       preview = makeTimeline(cfg, 0, 0);
       generateUntil(preview, 12 + (cfg.beats * 2 * 60) / cfg.bpm);
       preview.viewT = (-PREVIEW_LEAD * 60) / cfg.bpm;
     }
+    preview.practice = isPractice();
     buildLeds(preview.cfg.beats); buildSegments(segCount(preview)); idleProgress();
     laneDirty = meterDirty = hudDirty = true;
     if (SONG) { updateSongStartLabel(); songDirty = true; }
@@ -3540,7 +3746,7 @@ self.onmessage = (e) => {
       case 'bpmRange': setBpm(+t.value); return;
       case 'bpmNum': if (e.type === 'change') setBpm(+t.value); return;
       case 'source': settings.source = t.value; break;
-      case 'beats': case 'sub': case 'length': settings[t.name] = +t.value; break;
+      case 'beats': case 'sub': case 'length': case 'practiceMin': settings[t.name] = +t.value; break;
       case 'diff': case 'gap': case 'ramp': settings[t.name] = t.value; break;
       case 'sound': settings.sound = t.value; if (e.type === 'change') previewSound(); break;
       case 'accent': case 'subClick': settings[t.name] = t.checked; break;
@@ -3595,6 +3801,7 @@ self.onmessage = (e) => {
     Object.assign(C, { screen: v('--screen'), lane: v('--lane'), ink: v('--ink'), ink2: v('--ink-2'), muted: v('--muted'), line: v('--line'), staff: v('--staff'), track: v('--track'), accent: v('--accent') });
     for (const k of ['perfect', 'good', 'ok', 'miss']) { J[k] = v('--j-' + k); JT[k] = v('--jt-' + k); }
     J.extra = J.miss; JT.extra = JT.miss;
+    J.free = JT.free = v('--ink-2'); // Practice Only taps: shown, not judged
     laneDirty = meterDirty = songDirty = true;
     if (phase === 'results') drawResultChart();
   }
@@ -3609,7 +3816,8 @@ self.onmessage = (e) => {
       'songSec', 'songDrop', 'songFile', 'songStatus', 'songProg', 'songStatusText', 'songBody', 'songBpmVal', 'songTempoName', 'songBpmPrecise',
       'songName', 'songDur', 'songBeats', 'songConf', 'songStab', 'songAlts', 'songStartLbl', 'waveCv', 'detailCv', 'songPlayBtn', 'songTime',
       'songClickIn', 'songVolIn', 'dbPrev', 'dbNext', 'tempoNote', 'tempoCv', 'tempoTip', 'songPracticeBtn', 'songUseBpmBtn',
-      'immStop', 'immGroup', 'immersiveIn', 'langSwitch'];
+      'immStop', 'immGroup', 'immersiveIn', 'langSwitch',
+      'app', 'modeTabs', 'modeNote', 'prElapsed', 'prLeft', 'prBars', 'timeLabel', 'timeBar', 'timeFill'];
     for (const id of ids) el[id] = document.getElementById(id);
     el.form = document.getElementById('settings');
     el.srcMetro = document.getElementById('src-metro');
@@ -3666,6 +3874,21 @@ self.onmessage = (e) => {
       clearArmed = now;
       el.clearLog.textContent = t('log.confirm');
       setTimeout(() => { if (clearArmed && Date.now() - clearArmed >= 3900) { clearArmed = 0; el.clearLog.textContent = t('log.clear'); } }, 4100);
+    });
+    el.modeTabs.addEventListener('click', (e) => {
+      const b = e.target && e.target.closest ? e.target.closest('button[data-mode]') : null;
+      if (!b) return;
+      setMode(b.dataset.mode);
+      if (e.detail > 0) b.blur(); // after a mouse/touch click, Space starts the exercise
+    });
+    el.modeTabs.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const tabs = Array.from(el.modeTabs.querySelectorAll('button[data-mode]'));
+      const i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      e.preventDefault();
+      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      setMode(next.dataset.mode); next.focus();
     });
     el.langSwitch.addEventListener('click', (e) => {
       const b = e.target && e.target.closest ? e.target.closest('button[data-lang]') : null;

@@ -1,5 +1,5 @@
 // Offline cache for the Metronome app. Bump VERSION after editing any file.
-const VERSION = 'metronome-v3';
+const VERSION = 'metronome-v4';
 // this app's caches (it was called Nhịp Chuẩn before); caches of other apps on the same site are left alone
 const OURS = /^(metronome|nhip-chuan)-v\d+$/;
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
