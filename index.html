@@ -2085,11 +2085,18 @@ html.imm-on, html.imm-on body { overflow: hidden; overscroll-behavior: none; }
   let timer = null;
   function startTimer() { stopTimer(); timer = setInterval(schedTick, TICK_MS); schedTick(); }
   function stopTimer() { if (timer) clearInterval(timer); timer = null; }
+  // Background tabs may only run timers about once a second, so schedule clicks further ahead there.
+  const lookahead = () => (document.hidden ? 1.6 : LOOKAHEAD);
   function schedTick() {
     const s = S; if (!s || !isActive() || !A.ctx) return;
     const now = A.ctx.currentTime;
+    if (document.hidden) { // no animation frames in a background tab: keep the session moving from here
+      sampleClock();
+      update(perfToHeard(performance.now()) - s.cal);
+      if (S !== s) return;
+    }
     if (s.totalBars === Infinity) generateUntil(s, now + 10);
-    const ev = s.events, horizon = now + LOOKAHEAD;
+    const ev = s.events, horizon = now + lookahead();
     while (s.schedIdx < ev.length && ev[s.schedIdx].t < horizon) {
       const e = ev[s.schedIdx++];
       if (e.audible && e.t > now - 0.002) playVoice(s.bus, Math.max(e.t, now), e.lvl, s.cfg.sound);
@@ -2625,7 +2632,7 @@ self.onmessage = (e) => {
   }
   function audTick() {
     if (!aud || !A.ctx || !SONG) return;
-    const now = A.ctx.currentTime, horizon = now + LOOKAHEAD, times = SONG.times, M = settings.beats;
+    const now = A.ctx.currentTime, horizon = now + lookahead(), times = SONG.times, M = settings.beats;
     while (aud.next < times.length) {
       const ct = aud.T0 + (times[aud.next] - aud.a0);
       if (ct >= horizon) break;
@@ -3976,10 +3983,11 @@ self.onmessage = (e) => {
 
     window.addEventListener('keydown', onKeyDown, true);
     window.addEventListener('keyup', onKeyUp, true);
+    // Switching tab or app no longer stops anything: the click keeps playing in the background.
+    // The browser drops the screen wake lock while hidden, so ask for it again on return.
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) return;
-      if (isActive()) { finishSession(true); toast(t('toast.hidden')); }
-      if (aud) stopAudition();
+      if (!document.hidden && isActive()) requestWakeLock();
+      if (document.hidden) schedTick();
     });
     if (window.ResizeObserver) {
       const ro = new ResizeObserver((entries) => {
